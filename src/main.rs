@@ -92,6 +92,7 @@ async fn main() {
         .unwrap_or(Vec2::ZERO);
 
     let mut game_camera = Camera::new(player_position);
+    game_camera.zoom = 2.0;
 
     loop {
         context.dt = get_frame_time();
