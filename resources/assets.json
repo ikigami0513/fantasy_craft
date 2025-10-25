@@ -1,4 +1,10 @@
 {
+    "maps": [
+        {
+            "id": "test_map",
+            "path": "resources/maps/tests.json"
+        }
+    ],
     "spritesheets": [
         {
             "id": "player_base",

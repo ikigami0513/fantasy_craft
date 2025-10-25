@@ -4,6 +4,12 @@ use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
 #[derive(Deserialize)]
+struct MapData {
+    id: String,
+    path: String
+}
+
+#[derive(Deserialize)]
 struct FrameSequenceData {
     row: u32,
     count: u32,
@@ -28,6 +34,7 @@ struct AnimationData {
 
 #[derive(Deserialize)]
 struct AssetFileData {
+    maps: Vec<MapData>,
     spritesheets: Vec<SpritesheetData>,
     animations: Vec<AnimationData>,
 }
@@ -159,6 +166,10 @@ impl AssetServer {
     pub async fn load_assets_from_file(&mut self, path: &str) -> Result<(), Box<dyn std::error::Error>> {
         let json_content = std::fs::read_to_string(path)?;
         let asset_data: AssetFileData = serde_json::from_str(&json_content)?;
+
+        for map_data in asset_data.maps {
+            self.load_tiled_map(map_data.id, &map_data.path).await.unwrap();
+        }
 
         // 1. Chargement des Spritesheets
         for ss_data in asset_data.spritesheets {

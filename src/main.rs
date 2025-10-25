@@ -91,10 +91,6 @@ async fn main() {
         .await
         .expect("Failed to load assets from JSON file");
 
-    asset_server.load_tiled_map("test_map".to_string(), "resources/maps/tests.json")
-        .await
-        .expect("Failed to load Tiled map");
-
     let world = World::new();
 
     let mut context = Context {
