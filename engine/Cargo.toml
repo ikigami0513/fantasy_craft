@@ -1,0 +1,16 @@
+[package]
+name = "engine"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "engine"
+path = "src/lib.rs"
+
+[dependencies]
+macroquad = { workspace = true }
+hecs = { workspace = true }
+parry2d = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+rand = { workspace = true }

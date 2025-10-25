@@ -1,25 +1,15 @@
 use hecs::World;
 use macroquad::prelude::*;
 
-mod assets;
-mod asset_server;
-mod camera;
-mod components;
-mod systems;
-mod schedule;
-mod context;
-mod tiled_map;
-mod physics;
-
-use crate::asset_server::AssetServer;
-use crate::camera::{update_camera, Camera, CameraTarget, MainCamera};
-use crate::components::{AnimationComponent, Behavior, BehaviorComponent, DirectionComponent, NpcTag, PlayerTag, Speed, StateComponent, Transform, Velocity};
-use crate::components::{Direction, State};
-use crate::context::Context;
-use crate::physics::{collider_debug_render_system, physics_system, BodyType, Collider, RigidBody};
-use crate::schedule::{Schedule, Stage};
-use crate::tiled_map::{MainTileMap, TileMapComponent};
-use systems::*;
+use engine::asset_server::AssetServer;
+use engine::camera::{update_camera, Camera, CameraTarget, MainCamera};
+use engine::components::{AnimationComponent, Behavior, BehaviorComponent, DirectionComponent, NpcTag, PlayerTag, Speed, StateComponent, Transform, Velocity};
+use engine::components::{Direction, State};
+use engine::context::Context;
+use engine::physics::{collider_debug_render_system, physics_system, BodyType, Collider, RigidBody};
+use engine::schedule::{Schedule, Stage};
+use engine::tiled_map::{MainTileMap, TileMapComponent};
+use engine::systems::*;
 
 fn window_conf() -> Conf {
     Conf {
