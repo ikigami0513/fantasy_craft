@@ -1,6 +1,7 @@
 use std::{collections::HashMap, sync::Arc};
 use macroquad::prelude::*;
 use serde::Deserialize;
+use std::path::{Path, PathBuf};
 
 #[derive(Deserialize)]
 struct FrameSequenceData {
@@ -31,12 +32,14 @@ struct AssetFileData {
     animations: Vec<AnimationData>,
 }
 
-use crate::assets::{Animation, AnimationKeyFrame, Spritesheet};
+use crate::{assets::{Animation, AnimationKeyFrame, Spritesheet}, tiled_map::{LayerData, RenderedTileMap, TileMap, TiledMapData, Tileset}};
 
 // --- AssetServer ---
 pub struct AssetServer {
     animations: HashMap<String, Animation>,
-    spritesheets: HashMap<String, Arc<Spritesheet>>
+    spritesheets: HashMap<String, Arc<Spritesheet>>,
+    maps: HashMap<String, TileMap>,
+    rendered_maps: HashMap<String, RenderedTileMap>
 }
 
 #[allow(dead_code)]
@@ -44,7 +47,9 @@ impl AssetServer {
     pub fn new() -> Self {
         Self {
             animations: HashMap::new(),
-            spritesheets: HashMap::new()
+            spritesheets: HashMap::new(),
+            maps: HashMap::new(),
+            rendered_maps: HashMap::new()
         }
     }
 
@@ -67,6 +72,87 @@ impl AssetServer {
 
     pub fn get_animation_mut(&mut self, name: &str) -> Option<&mut Animation> {
         self.animations.get_mut(name)
+    }
+
+    pub fn get_map(&self, name: &str) -> Option<&TileMap> {
+        self.maps.get(name)
+    }
+
+    pub fn get_renderer_map(&self, id: &str) -> Option<&RenderedTileMap> {
+        self.rendered_maps.get(id)
+    }
+
+    pub async fn load_tiled_map(&mut self, id: String, path: &str) -> Result<(), Box<dyn std::error::Error>> {
+        let json_content = std::fs::read_to_string(path)?;
+        let map_data: TiledMapData = serde_json::from_str(&json_content)?;
+
+        let map_path = Path::new(path);
+
+        let map_dir = map_path.parent().unwrap_or(Path::new(""));
+
+        let mut tilesets = Vec::new();
+        let mut tile_layers = HashMap::new();
+
+        for ts_data in &map_data.tilesets {
+            let relative_image_path = Path::new(&ts_data.image); 
+
+            let absolute_image_path: PathBuf = map_dir.join(relative_image_path);
+            
+            let tileset_path = absolute_image_path.to_str()
+                .ok_or_else(|| "Failed to convert path to string")?
+                .to_string();
+
+            if !self.spritesheets.contains_key(&tileset_path) {
+                let texture = load_texture(&tileset_path).await?;
+                texture.set_filter(FilterMode::Nearest);
+                
+                let tile_w = ts_data.tilewidth as f32; // On utilise la dimension du Tileset
+                let tile_h = ts_data.tileheight as f32;
+
+                let spritesheet = Spritesheet::new(texture, tile_w, tile_h);
+                self.add_spritesheet(tileset_path.clone(), spritesheet);
+            }
+
+            let spritesheet_arc = self.spritesheets.get(&tileset_path)
+                .ok_or_else(|| format!("Spritesheet for Tiled Tileset '{}' not found", tileset_path))?
+                .clone();
+
+            let columns = ts_data.columns;
+
+            tilesets.push(Tileset {
+                first_gid: ts_data.firstgid,
+                spritesheet: spritesheet_arc,
+                columns,
+                tile_width: map_data.tilewidth as f32,
+                tile_height: map_data.tileheight as f32
+            });
+        }
+
+        tilesets.sort_by_key(|ts| ts.first_gid);
+
+        for layer in map_data.layers {
+            if let LayerData::TileLayer { name, data, visible, .. } = layer {
+                if visible {
+                    tile_layers.insert(name, data);
+                }
+            }
+        }
+
+        let tile_map = TileMap {
+            width: map_data.width,
+            height: map_data.height,
+            tile_width: map_data.tilewidth,
+            tile_height: map_data.tileheight,
+            tile_layers,
+            tilesets,
+        };
+
+        let rendered_map = tile_map.to_render_tilemap();
+        self.rendered_maps.insert(id.clone(), rendered_map);
+
+        self.maps.insert(id, tile_map);
+
+        Ok(())
     }
     
     // --- Logique de chargement ---

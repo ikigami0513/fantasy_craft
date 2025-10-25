@@ -1,0 +1,44 @@
+{
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
+    "activeFile": "",
+    "expandedProjectPaths": [
+    ],
+    "fileStates": {
+        "tests.json": {
+            "scale": 0.087158203125,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 2047.9999999999998,
+                "y": 2042.2633053221293
+            }
+        },
+        "tests.json#grass_middle": {
+            "scaleInDock": 1
+        },
+        "tests.json#grass_tiles": {
+            "scaleInDock": 1
+        }
+    },
+    "last.exportedFilePath": "/home/ikigami/Documents/Projets/fantasy_craft/resources/maps",
+    "last.imagePath": "/home/ikigami/Documents/Projets/fantasy_craft/resources/textures/tilesets",
+    "map.height": 256,
+    "map.lastUsedExportFilter": "Tous les Fichiers (*)",
+    "map.lastUsedFormat": "tmx",
+    "map.tileHeight": 16,
+    "map.tileWidth": 16,
+    "map.width": 256,
+    "openFiles": [
+    ],
+    "project": "fantasy_craft.tiled-project",
+    "recentFiles": [
+        "tests.json"
+    ],
+    "tileset.embedInMap": true,
+    "tileset.tileSize": {
+        "height": 16,
+        "width": 16
+    }
+}

@@ -1,5 +1,6 @@
 use macroquad::prelude::*;
 
+#[derive(Clone, Copy)]
 pub struct Camera {
     current_position: Vec2,
     pub lerp_factor: f32,
@@ -15,9 +16,20 @@ impl Camera {
         }
     }
 
-    pub fn update(&mut self, target_position: Vec2, dt: f32) {
+    pub fn update(&mut self, target_position: Vec2, dt: f32, world_size: Option<Vec2>) {
+        // Smooth interpolation toward the target
         let lerp_speed = 1.0 - (-self.lerp_factor * dt).exp();
-        self.current_position = self.current_position.lerp(target_position, lerp_speed);
+        let mut desired_position = self.current_position.lerp(target_position, lerp_speed);
+
+        if let Some(world_size) = world_size {
+            let half_view_w = screen_width() / (2.0 * self.zoom);
+            let half_view_h = screen_height() / (2.0 * self.zoom);
+
+            desired_position.x = desired_position.x.clamp(half_view_w, world_size.x - half_view_w);
+            desired_position.y = desired_position.y.clamp(half_view_h, world_size.y - half_view_h);
+        }
+
+        self.current_position = desired_position;
     }
     
     pub fn set_camera(&self) {

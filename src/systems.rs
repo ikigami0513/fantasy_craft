@@ -103,6 +103,19 @@ pub fn update_animations(ctx: &mut Context) {
 }
 
 pub fn render_system(ctx: &mut Context) {
+    if let Some(rendered_map) = ctx.asset_server.get_renderer_map("test_map") {
+        draw_texture_ex(
+            &rendered_map.texture.texture,
+            0.0,
+            0.0,
+            WHITE,
+            DrawTextureParams {
+                dest_size: Some(vec2(rendered_map.width, rendered_map.height)),
+                ..Default::default()
+            }
+        );
+    }
+
     for (_, (animation_comp, transform)) in ctx.world.query::<(&AnimationComponent, &Transform)>().iter() {
         if let Some(animation) = ctx.asset_server.get_animation_mut(&animation_comp.0) {
             animation.draw(transform.position.x, transform.position.y);

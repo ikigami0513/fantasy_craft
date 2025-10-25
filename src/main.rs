@@ -8,6 +8,7 @@ mod components;
 mod systems;
 mod schedule;
 mod context;
+mod tiled_map;
 
 use crate::asset_server::AssetServer;
 use crate::camera::Camera;
@@ -27,8 +28,14 @@ fn window_conf() -> Conf {
 }
 
 pub fn setup_system(ctx: &mut Context) {
+    let map = ctx.asset_server.get_map("test_map").unwrap();
+    let map_center = Vec2::new((map.width as f32 * map.tile_width as f32) / 2.0, (map.height as f32 * map.tile_height as f32) / 2.0);
+
     ctx.world.spawn((
-        Transform::default(),
+        Transform {
+            position: map_center,
+            ..Default::default()
+        },
         Velocity(Vec2::ZERO),
         Speed(100.0),
         DirectionComponent(Direction::Down),
@@ -39,7 +46,7 @@ pub fn setup_system(ctx: &mut Context) {
 
     ctx.world.spawn((
         Transform {
-            position: Vec2::new(100.0, 100.0),
+            position: Vec2::new(map_center.x - 50.0, map_center.y - 50.0),
             ..Default::default()
         },
         Speed(100.0),
@@ -63,6 +70,10 @@ async fn main() {
         .await
         .expect("Failed to load assets from JSON file");
 
+    asset_server.load_tiled_map("test_map".to_string(), "resources/maps/tests.json")
+        .await
+        .expect("Failed to load Tiled map");
+
     let world = World::new();
 
     let mut context = Context {
@@ -74,7 +85,7 @@ async fn main() {
     let mut schedule = Schedule::new();
 
     schedule.add_system(Stage::StartUp, setup_system);
-
+    
     schedule.add_system(Stage::Update, player_update);
     schedule.add_system(Stage::Update, npc_behavior_system);
     schedule.add_system(Stage::Update, movement_system);
@@ -92,10 +103,19 @@ async fn main() {
         .unwrap_or(Vec2::ZERO);
 
     let mut game_camera = Camera::new(player_position);
-    game_camera.zoom = 2.0;
+    game_camera.zoom = 1.5;
+
+    let mut fps_timer: f32 = 0.0;
+    let mut displayed_fps: i32 = get_fps();
 
     loop {
         context.dt = get_frame_time();
+        fps_timer += context.dt;
+
+        if fps_timer >= 1.0 {
+            displayed_fps = get_fps();
+            fps_timer = 0.0;
+        }
 
         clear_background(LIGHTGRAY);
 
@@ -103,7 +123,13 @@ async fn main() {
         schedule.run_stage(Stage::PostUpdate, &mut context);
 
         if let Some((_, transform)) = context.world.query::<&Transform>().with::<&PlayerTag>().iter().next() {
-            game_camera.update(transform.position, context.dt);
+            let map = context.asset_server.get_map("test_map").unwrap();
+            let world_size = Vec2::new(
+                map.width as f32 * map.tile_width as f32,
+                map.height as f32 * map.tile_height as f32
+            );
+            
+            game_camera.update(transform.position, context.dt, Some(world_size));
             game_camera.set_camera();
         }
 
@@ -111,7 +137,8 @@ async fn main() {
 
         game_camera.unset_camera();
 
-        // draw gui here
+        let fps_text = format!("FPS: {}", displayed_fps);
+        draw_text(&fps_text, 10.0, 25.0, 30.0, BLACK);
 
         next_frame().await
     }
