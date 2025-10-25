@@ -9,12 +9,14 @@ mod systems;
 mod schedule;
 mod context;
 mod tiled_map;
+mod physics;
 
 use crate::asset_server::AssetServer;
 use crate::camera::{update_camera, Camera, CameraTarget, MainCamera};
 use crate::components::{AnimationComponent, Behavior, BehaviorComponent, DirectionComponent, NpcTag, PlayerTag, Speed, StateComponent, Transform, Velocity};
 use crate::components::{Direction, State};
 use crate::context::Context;
+use crate::physics::{collider_debug_render_system, physics_system, BodyType, Collider, RigidBody};
 use crate::schedule::{Schedule, Stage};
 use crate::tiled_map::{MainTileMap, TileMapComponent};
 use systems::*;
@@ -51,6 +53,7 @@ pub fn setup_system(ctx: &mut Context) {
         MainTileMap
     ));
 
+    // Player
     ctx.world.spawn((
         Transform {
             position: map_center,
@@ -62,9 +65,12 @@ pub fn setup_system(ctx: &mut Context) {
         StateComponent(State::Idle),
         AnimationComponent("player_base_idle_down".to_string()),
         PlayerTag,
-        CameraTarget
+        CameraTarget,
+        RigidBody::new(BodyType::Dynamic),
+        Collider::new_box(32.0, 32.0)
     ));
 
+    // Farmer Npc
     ctx.world.spawn((
         Transform {
             position: Vec2::new(map_center.x - 50.0, map_center.y - 50.0),
@@ -79,7 +85,9 @@ pub fn setup_system(ctx: &mut Context) {
             name: "farmer".to_string(),
             wander_time: 0.0,
             wander_target_duration: 0.0
-        }
+        },
+        RigidBody::new(BodyType::Dynamic),
+        Collider::new_box(32.0, 32.0)
     ));
 }
 
@@ -108,10 +116,12 @@ async fn main() {
     schedule.add_system(Stage::Update, movement_system);
     schedule.add_system(Stage::Update, update_animations);
 
+    schedule.add_system(Stage::PostUpdate, physics_system);
     schedule.add_system(Stage::PostUpdate, update_camera);
 
     schedule.add_system(Stage::Render, tiled_map_render_system);
     schedule.add_system(Stage::Render, entities_render_system);
+    schedule.add_system(Stage::Render, collider_debug_render_system);
 
     let mut fps_timer: f32 = 0.0;
     let mut displayed_fps: i32 = get_fps();
