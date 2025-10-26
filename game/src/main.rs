@@ -65,7 +65,7 @@ pub fn setup_system(ctx: &mut Context) {
         PlayerTag,
         CameraTarget,
         RigidBody::new(BodyType::Dynamic),
-        Collider::new_box(32.0, 32.0)
+        Collider::new_box(16.0, 20.0)
     ));
 
     // Farmer Npc
@@ -85,7 +85,7 @@ pub fn setup_system(ctx: &mut Context) {
             wander_target_duration: 0.0
         },
         RigidBody::new(BodyType::Dynamic),
-        Collider::new_box(32.0, 32.0)
+        Collider::new_box(16.0, 20.0)
     ));
 }
 
