@@ -3,7 +3,7 @@ use macroquad::prelude::*;
 use engine::{gui::components::TextDisplay, prelude::*};
 use ::rand::{seq::IteratorRandom, thread_rng, Rng};
 
-use crate::components::{AnimationPrefix, Behavior, BehaviorComponent, FpsDisplay, NpcTag, PlayerTag};
+use crate::components::{AnimationPrefix, Behavior, BehaviorComponent, ClickMeAction, FpsDisplay, NpcTag, PlayerTag};
 
 pub fn npc_behavior_system(ctx: &mut Context) {
     for (_, (transform, npc, behavior, state, direction, speed, animation_comp)) in ctx.world.query::<(&mut Transform, &mut NpcTag, &BehaviorComponent, &mut StateComponent, &mut DirectionComponent, &Speed, &mut AnimationComponent)>().iter() {
@@ -131,6 +131,17 @@ pub fn check_player_npc_collision(ctx: &mut Context) {
         }
         else if b_is_player && a_is_npc {
             println!("💥 Collision détectée ! PNJ ({:?}) a touché Joueur ({:?})", e_a, e_b);
+        }
+    }
+}
+
+pub fn click_me_system(ctx: &mut Context) {
+    let mut query = ctx.world.query::<(&mut GuiButton, &ClickMeAction)>();
+
+    for (_, (button, _action)) in query.iter() {
+        if button.just_clicked {
+            println!("Click me OK");
+            button.just_clicked = false;
         }
     }
 }

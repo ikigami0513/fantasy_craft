@@ -28,3 +28,6 @@ pub struct FpsDisplay {
     pub fps_timer: f32,
     pub displayed_fps: i32
 }
+
+#[derive(Debug, Default)]
+pub struct ClickMeAction;
