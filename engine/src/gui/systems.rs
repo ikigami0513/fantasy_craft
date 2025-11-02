@@ -1,8 +1,9 @@
+use hecs::Entity;
 use macroquad::prelude::*;
 use crate::core::context::Context;
 use crate::gui::components::{TextDisplay, GuiBox};
 use crate::physics::components::Transform;
-use crate::prelude::{ButtonState, GuiButton, GuiCheckbox, GuiDraggable, GuiSlider, Visible};
+use crate::prelude::{ButtonState, GuiButton, GuiCheckbox, GuiDraggable, GuiInputField, GuiSlider, Visible};
 
 pub fn button_interaction_system(ctx: &mut Context) {
     let (mouse_x, mouse_y) = mouse_position();
@@ -273,6 +274,153 @@ pub fn checkbox_render_system(ctx: &mut Context) {
             let padding = w * 0.2;
             draw_line(x + padding, y + padding, x + w - padding, y + h - padding, 2.0, BLACK);
             draw_line(x + w - padding, y + padding, x + padding, y + h - padding, 2.0, BLACK);
+        }
+    }
+}
+
+pub fn input_field_focus_system(ctx: &mut Context) {
+    let (mouse_x, mouse_y) = mouse_position();
+    let is_pressed = is_mouse_button_pressed(MouseButton::Left);
+
+    if !is_pressed {
+        return;
+    }
+
+    let mut clicked_entity: Option<Entity> = None;
+    
+    let mut query = ctx.world.query::<(&Transform, &GuiBox, Option<&Visible>)>();
+
+    for (e, (transform, gui_box, visibility)) in query.iter() {
+        if ctx.world.get::<&GuiInputField>(e).is_err() {
+            continue;
+        }
+
+        let is_visible = visibility.map_or(true, |v| v.0);
+        if !is_visible || !gui_box.screen_space {
+            continue;
+        }
+
+        let x = transform.position.x;
+        let y = transform.position.y;
+        let w = gui_box.width;
+        let h = gui_box.height;
+
+        let is_hovered = mouse_x >= x && mouse_x <= (x + w) && mouse_y >= y && mouse_y <= (y + h);
+
+        if is_hovered {
+            clicked_entity = Some(e);
+            break;
+        }
+    }
+
+    let mut query = ctx.world.query::<&mut GuiInputField>();
+    for (e, input_field) in query.iter() {
+        if Some(e) == clicked_entity {
+            input_field.is_focused = true;
+            input_field.caret_visible = true;
+            input_field.caret_blink_timer = 0.0;
+        }
+        else {
+            input_field.is_focused = false;
+        }
+    }
+}
+
+pub fn input_field_typing_system(ctx: &mut Context) {
+    const BACKSPACE_INITIAL_DELAY: f32 = 0.4;
+    const BACKSPACE_REPEAT_RATE: f32 = 0.05;
+
+    for (_, input_field) in ctx.world.query::<&mut GuiInputField>().iter() {
+        if !input_field.is_focused {
+            input_field.backspace_repeat_timer = 0.0;
+            continue;
+        }
+        
+        let backspace_pressed = is_key_pressed(KeyCode::Backspace);
+        let backspace_down = is_key_down(KeyCode::Backspace);
+
+        if backspace_pressed {
+            input_field.text.pop();
+            input_field.backspace_repeat_timer = BACKSPACE_INITIAL_DELAY;
+            input_field.caret_visible = true;
+            input_field.caret_blink_timer = 0.0;
+        } else if backspace_down {
+            input_field.backspace_repeat_timer -= ctx.dt;
+
+            if input_field.backspace_repeat_timer <= 0.0 {
+                input_field.text.pop();
+                input_field.backspace_repeat_timer = BACKSPACE_REPEAT_RATE;
+                input_field.caret_visible = true;
+                input_field.caret_blink_timer = 0.0;
+            }
+        } else {
+            input_field.backspace_repeat_timer = 0.0;
+        }
+
+        let mut char_typed = false;
+        while let Some(char) = get_char_pressed() {
+            if char == '\u{08}' { 
+                continue; 
+            }
+
+            let at_limit = input_field.max_chars.map_or(false, |max| input_field.text.len() >= max);
+        
+            if !at_limit {
+                input_field.text.push(char);
+                char_typed = true;
+            }
+        }
+
+        if char_typed {
+            input_field.caret_visible = true;
+            input_field.caret_blink_timer = 0.0;
+        }
+
+        input_field.caret_blink_timer += ctx.dt;
+        if input_field.caret_blink_timer >= 0.5 {
+            input_field.caret_visible = !input_field.caret_visible;
+            input_field.caret_blink_timer = 0.0;
+        }
+    }
+}
+
+pub fn input_field_render_system(ctx: &mut Context) {
+    let mut query = ctx.world.query::<(&GuiInputField, &Transform, &GuiBox, Option<&Visible>)>();
+
+    for (_, (input_field, transform, gui_box, visibility)) in query.iter() {
+        let is_visible = visibility.map_or(true, |v| v.0);
+        if !is_visible {
+            continue;
+        }
+
+        let padding = 5.0;
+        let text_x = transform.position.x + padding;
+
+        let text_y_top = transform.position.y + (gui_box.height / 2.0) - (input_field.font_size / 2.0);
+    
+        let baseline_y = text_y_top + input_field.font_size;
+
+        draw_text(
+            &input_field.text,
+            text_x,
+            baseline_y,
+            input_field.font_size,
+            input_field.color
+        );
+
+        if input_field.is_focused && input_field.caret_visible {
+            let text_dims = measure_text(&input_field.text, None, input_field.font_size as u16, 1.0);
+            
+            let caret_x = text_x + text_dims.width;
+            let caret_width = 2.0;
+
+            draw_rectangle(
+                caret_x,
+                text_y_top,
+                caret_width,
+                input_field.font_size,
+                input_field.color
+            );
         }
     }
 }

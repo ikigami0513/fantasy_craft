@@ -109,3 +109,29 @@ pub struct GuiCheckbox {
     pub is_checked: bool
 }
 
+#[derive(Debug, Clone)]
+pub struct GuiInputField {
+    pub text: String,
+    pub is_focused: bool,
+    pub caret_blink_timer: f32,
+    pub caret_visible: bool,
+    pub max_chars: Option<usize>,
+    pub font_size: f32,
+    pub color: Color,
+    pub backspace_repeat_timer: f32
+}
+
+impl Default for GuiInputField {
+    fn default() -> Self {
+        Self {
+            text: String::new(),
+            is_focused: false,
+            caret_blink_timer: 0.0,
+            caret_visible: true,
+            max_chars: None,
+            font_size: 30.0,
+            color: BLACK,
+            backspace_repeat_timer: 0.0
+        }
+    }
+}

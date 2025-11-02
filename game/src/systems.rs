@@ -108,6 +108,28 @@ pub fn setup_ui(ctx: &mut Context) {
         },
         Parent(button)
     ));
+
+    ctx.world.spawn((
+        Transform {
+            position: vec2(150.0, 400.0), // Positionnez-le où vous voulez
+            ..Default::default()
+        },
+        // Le fond visuel
+        GuiBox {
+            width: 200.0,
+            height: 40.0,
+            color: Color::new(0.9, 0.9, 0.9, 1.0), // Un gris clair
+            border_radius: 5.0,
+            ..Default::default()
+        },
+        // Le composant de logique de saisie
+        GuiInputField {
+            text: "".to_string(),
+            font_size: 28.0,
+            color: BLACK,
+            ..Default::default()
+        }
+    ));
 }
 
 pub fn setup_system(ctx: &mut Context) {
