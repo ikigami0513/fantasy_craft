@@ -37,3 +37,9 @@ pub struct DirectionComponent(pub Direction);
 
 #[derive(Debug)]
 pub struct StateComponent(pub State);
+
+#[derive(Debug)]
+pub struct Visible(pub bool);
+
+#[derive(Debug)]
+pub struct LocalVisible(pub bool);

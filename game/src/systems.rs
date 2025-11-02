@@ -19,7 +19,8 @@ pub fn setup_ui(ctx: &mut Context) {
         },
         GuiDraggable {
             is_dragging: false
-        }
+        },
+        Visible(true)
     ));
 
     ctx.world.spawn((

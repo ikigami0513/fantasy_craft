@@ -2,16 +2,22 @@ use macroquad::prelude::*;
 use crate::core::context::Context;
 use crate::gui::components::{TextDisplay, GuiBox};
 use crate::physics::components::Transform;
-use crate::prelude::{ButtonState, GuiButton, GuiCheckbox, GuiDraggable, GuiSlider};
+use crate::prelude::{ButtonState, GuiButton, GuiCheckbox, GuiDraggable, GuiSlider, Visible};
 
 pub fn button_interaction_system(ctx: &mut Context) {
     let (mouse_x, mouse_y) = mouse_position();
     let is_pressed = is_mouse_button_down(MouseButton::Left);
     let just_clicked = is_mouse_button_pressed(MouseButton::Left);
 
-    let mut query = ctx.world.query::<(&mut GuiButton, &Transform, &GuiBox)>();
+    let mut query = ctx.world.query::<(&mut GuiButton, &Transform, &GuiBox, Option<&Visible>)>();
 
-    for (_, (button, transform, gui_box)) in query.iter() {
+    for (_, (button, transform, gui_box, visibility)) in query.iter() {
+        let is_visible = visibility.map_or(true, |v| v.0);
+
+        if !is_visible {
+            continue;
+        }
+
         button.just_clicked = false;
 
         if !gui_box.screen_space { continue; }
@@ -53,7 +59,13 @@ pub fn button_interaction_system(ctx: &mut Context) {
 }
 
 pub fn gui_box_render_system(ctx: &mut Context) {
-    for (_, (gui_box, transform, button_opt)) in ctx.world.query::<(&GuiBox, &Transform, Option<&GuiButton>)>().iter() {
+    for (_, (gui_box, transform, button_opt, visibility)) in ctx.world.query::<(&GuiBox, &Transform, Option<&GuiButton>, Option<&Visible>)>().iter() {
+        let is_visible = visibility.map_or(true, |v| v.0);
+
+        if !is_visible {
+            continue;
+        }
+
         if !gui_box.screen_space {
             continue;
         }
@@ -98,7 +110,13 @@ pub fn gui_box_render_system(ctx: &mut Context) {
 }
 
 pub fn text_render_system(ctx: &mut Context) {
-    for (_, (text_display, transform)) in ctx.world.query::<(&TextDisplay, &Transform)>().iter() {
+    for (_, (text_display, transform, visibility)) in ctx.world.query::<(&TextDisplay, &Transform, Option<&Visible>)>().iter() {
+        let is_visible = visibility.map_or(true, |v| v.0);
+
+        if !is_visible {
+            continue;
+        }
+
         if text_display.screen_space {
             let baseline_y = transform.position.y + text_display.font_size;
 
@@ -122,9 +140,15 @@ pub fn draggable_system(ctx: &mut Context) {
     let is_pressed = is_mouse_button_pressed(MouseButton::Left); // Pour commencer le drag
     let is_down = is_mouse_button_down(MouseButton::Left);     // Pour maintenir/arrêter le drag
 
-    let mut query = ctx.world.query::<(&mut GuiDraggable, &mut Transform, &GuiBox)>();
+    let mut query = ctx.world.query::<(&mut GuiDraggable, &mut Transform, &GuiBox, Option<&Visible>)>();
 
-    for (_, (draggable, transform, gui_box)) in query.iter() {
+    for (_, (draggable, transform, gui_box, visibility)) in query.iter() {
+        let is_visible = visibility.map_or(true, |v| v.0);
+
+        if !is_visible {
+            continue;
+        }
+
         if draggable.is_dragging {
             // Si on est en train de glisser
             if !is_down { // On vérifie si le bouton est RELÂCHÉ (n'est plus enfoncé)
@@ -155,9 +179,15 @@ pub fn slider_interaction_system(ctx: &mut Context) {
     let is_pressed = is_mouse_button_pressed(MouseButton::Left);
     let is_down = is_mouse_button_down(MouseButton::Left);
 
-    let mut query = ctx.world.query::<(&mut GuiSlider, &Transform, &GuiBox)>();
+    let mut query = ctx.world.query::<(&mut GuiSlider, &Transform, &GuiBox, Option<&Visible>)>();
 
-    for (_, (slider, transform, gui_box)) in query.iter() {
+    for (_, (slider, transform, gui_box, visibility)) in query.iter() {
+        let is_visible = visibility.map_or(true, |v| v.0);
+
+        if !is_visible {
+            continue;
+        }
+
         let x = transform.position.x;
         let y = transform.position.y;
         let w = gui_box.width;
@@ -185,9 +215,15 @@ pub fn slider_interaction_system(ctx: &mut Context) {
 }
 
 pub fn slider_render_system(ctx: &mut Context) {
-    let mut query = ctx.world.query::<(&GuiSlider, &Transform, &GuiBox)>();
+    let mut query = ctx.world.query::<(&GuiSlider, &Transform, &GuiBox, Option<&Visible>)>();
 
-    for (_, (slider, transform, gui_box)) in query.iter() {
+    for (_, (slider, transform, gui_box, visibility)) in query.iter() {
+        let is_visible = visibility.map_or(true, |v| v.0);
+
+        if !is_visible {
+            continue;
+        }
+
         let normalized_value = (slider.value - slider.min) / (slider.max - slider.min).max(f32::EPSILON);
         let handle_width = slider.handle_width;
         let handle_x = transform.position.x + (normalized_value * gui_box.width) - (handle_width / 2.0);
@@ -203,9 +239,15 @@ pub fn slider_render_system(ctx: &mut Context) {
 }
 
 pub fn checkbox_logic_system(ctx: &mut Context) {
-    let mut query = ctx.world.query::<(&GuiButton, &mut GuiCheckbox)>();
+    let mut query = ctx.world.query::<(&GuiButton, &mut GuiCheckbox, Option<&Visible>)>();
 
-    for (_, (button, checkbox)) in query.iter() {
+    for (_, (button, checkbox, visibility)) in query.iter() {
+        let is_visible = visibility.map_or(true, |v| v.0);
+
+        if !is_visible {
+            continue;
+        }
+        
         if button.just_clicked {
             checkbox.is_checked = !checkbox.is_checked;
         }
@@ -213,9 +255,15 @@ pub fn checkbox_logic_system(ctx: &mut Context) {
 }
 
 pub fn checkbox_render_system(ctx: &mut Context) {
-    let mut query = ctx.world.query::<(&GuiCheckbox, &Transform, &GuiBox)>();
+    let mut query = ctx.world.query::<(&GuiCheckbox, &Transform, &GuiBox, Option<&Visible>)>();
 
-    for (_, (checkbox, transform, gui_box)) in query.iter() {
+    for (_, (checkbox, transform, gui_box, visibility)) in query.iter() {
+        let is_visible = visibility.map_or(true, |v| v.0);
+
+        if !is_visible {
+            continue;
+        }
+
         if checkbox.is_checked {
             let x = transform.position.x;
             let y = transform.position.y;
