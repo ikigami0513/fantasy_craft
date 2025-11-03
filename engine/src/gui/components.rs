@@ -137,3 +137,22 @@ impl Default for GuiInputField {
         }
     }
 }
+
+#[derive(Debug, Clone)]
+pub struct GuiImage {
+    pub texture: Option<String>,
+    pub col_row: UVec2,
+    pub tint: Color,
+    pub screen_space: bool
+}
+
+impl Default for GuiImage {
+    fn default() -> Self {
+        Self {
+            texture: None,
+            col_row: uvec2(0, 0),
+            tint: WHITE,
+            screen_space: true
+        }
+    }
+}

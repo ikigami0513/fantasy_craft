@@ -3,7 +3,7 @@ use macroquad::prelude::*;
 use crate::core::context::Context;
 use crate::gui::components::{TextDisplay, GuiBox};
 use crate::physics::components::Transform;
-use crate::prelude::{ButtonState, GuiButton, GuiCheckbox, GuiDraggable, GuiInputField, GuiSlider, Visible};
+use crate::prelude::{ButtonState, GuiButton, GuiCheckbox, GuiDraggable, GuiImage, GuiInputField, GuiSlider, Visible};
 
 pub fn button_interaction_system(ctx: &mut Context) {
     let (mouse_x, mouse_y) = mouse_position();
@@ -435,6 +435,45 @@ pub fn input_focus_update_system(ctx: &mut Context) {
         if input_field.is_focused {
             ctx.input_focus.is_captured_by_ui = true;
             break;
+        }
+    }
+}
+
+pub fn gui_image_render_system(ctx: &mut Context) {
+    let mut query = ctx.world.query::<(&GuiImage, &Transform, Option<&GuiBox>, Option<&Visible>)>();
+
+    for (_, (gui_image, transform, gui_box_opt, visibility)) in query.iter() {
+        let is_visible = visibility.map_or(true, |v| v.0);
+        if !is_visible {
+            continue;
+        }
+
+        if !gui_image.screen_space {
+            continue;
+        }
+
+        if let Some(spritesheet_name) = &gui_image.texture {
+            if let Some(spritesheet) = ctx.asset_server.get_spritesheet(&spritesheet_name) {
+                let texture = &spritesheet.texture;
+                let source = spritesheet.get_source_rect(gui_image.col_row.x, gui_image.col_row.y);
+
+                let dest_size = if let Some(gui_box) = gui_box_opt {
+                    vec2(gui_box.width, gui_box.height)
+                } else {
+                    vec2(spritesheet.sprite_width * transform.scale.x, spritesheet.sprite_height * transform.scale.y)
+                };
+
+                let draw_x = transform.position.x;
+                let draw_y = transform.position.y;
+
+                let draw_params = DrawTextureParams {
+                    dest_size: Some(dest_size),
+                    source,
+                    ..Default::default()
+                };
+
+                draw_texture_ex(texture, draw_x, draw_y, gui_image.tint, draw_params);
+            }
         }
     }
 }

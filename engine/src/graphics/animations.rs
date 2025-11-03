@@ -1,4 +1,6 @@
 use std::sync::Arc;
+use macroquad::math::Vec2;
+
 use crate::core::plugins::Plugin;
 use crate::prelude::Stage;
 use crate::{graphics::sprites::Spritesheet, prelude::Context};
@@ -43,10 +45,10 @@ impl Animation {
         }
     }
 
-    pub fn draw(&self, x: f32, y: f32) {
+    pub fn draw(&self, x: f32, y: f32, scale: Vec2) {
         let frame_index = self.current_index.floor() as usize;
         let key_frame = self.frames.get(frame_index).expect("AnimationKeyFrame index out of bounds");
-        self.spritesheet.draw_sprite(key_frame.column, key_frame.row, x, y, 1.0, self.flip);
+        self.spritesheet.draw_sprite(key_frame.column, key_frame.row, x, y, scale, self.flip);
     }
 }
 
@@ -64,7 +66,7 @@ pub fn update_animations(ctx: &mut Context) {
 pub fn animation_render_system(ctx: &mut Context) {
     for (_, (animation_comp, transform)) in ctx.world.query::<(&AnimationComponent, &Transform)>().iter() {
         if let Some(animation) = ctx.asset_server.get_animation_mut(&animation_comp.0) {
-            animation.draw(transform.position.x, transform.position.y);
+            animation.draw(transform.position.x, transform.position.y, transform.scale);
         }
     }
 }

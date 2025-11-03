@@ -131,6 +131,23 @@ pub fn setup_ui(ctx: &mut Context) {
             ..Default::default()
         }
     ));
+
+    ctx.world.spawn((
+        Transform {
+            position: vec2(600.0, 100.0),
+            ..Default::default()
+        },
+        GuiImage {
+            texture: Some("logo_engine".to_string()),
+            col_row: uvec2(0, 0),
+            ..Default::default()
+        },
+        GuiBox {
+            width: 300.0,
+            height: 300.0,
+            ..Default::default()
+        }
+    ));
 }
 
 pub fn setup_system(ctx: &mut Context) {

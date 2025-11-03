@@ -78,7 +78,7 @@ impl TileMap {
                     if let Some((col, row, tileset)) = self.get_tile_coords(gid) {
                         let draw_x = x as f32 * tile_w + tile_w / 2.0;
                         let draw_y = y as f32 * tile_h + tile_h / 2.0;
-                        tileset.spritesheet.draw_sprite(col, row, draw_x, draw_y, 1.0, false);
+                        tileset.spritesheet.draw_sprite(col, row, draw_x, draw_y, vec2(1.0, 1.0), false);
                     }
                 }
             }
@@ -123,7 +123,7 @@ impl TileMap {
                     if let Some((col, row, tileset)) = self.get_tile_coords(gid) {
                         let draw_x = x as f32 * tile_w + tile_w / 2.0;
                         let draw_y = y as f32 * tile_h + tile_h / 2.0;
-                        tileset.spritesheet.draw_sprite(col, row, draw_x, draw_y, 1.0, false);
+                        tileset.spritesheet.draw_sprite(col, row, draw_x, draw_y, vec2(1.0, 1.0), false);
                     }
                 }
             }
