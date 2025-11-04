@@ -7,12 +7,6 @@
     ],
     "spritesheets": [
         {
-            "id": "logo_engine",
-            "path": "resources/textures/logo_engine.png",
-            "columns": 1,
-            "rows": 1
-        },
-        {
             "id": "player_base",
             "path": "resources/textures/player_base.png",
             "columns": 9,

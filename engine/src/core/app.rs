@@ -5,6 +5,8 @@ use crate::core::focus::InputFocus;
 use crate::core::schedule::{Schedule, Stage, System};
 use crate::core::asset_server::AssetServer;
 use crate::core::plugins::Plugin;
+use crate::graphics::splash_screen::{despawn_splash_screen, setup_splash_screen};
+use crate::prelude::Spritesheet;
 
 pub struct App {
     pub context: Context,
@@ -42,6 +44,33 @@ impl App {
     }
 
     pub async fn run(mut self) {
+        const SPLASH_DURATION: f64 = 3.0;
+
+        self.context.asset_server.add_spritesheet("logo_engine".to_string(), Spritesheet::new(
+            load_texture("resources/textures/logo_engine.png").await.unwrap(),
+            1024.0, 1024.0
+        ));
+
+        setup_splash_screen(&mut self.context);
+
+        let start_time = get_time();
+        while get_time() - start_time < SPLASH_DURATION {
+            self.context.dt = get_frame_time();
+            
+            clear_background(BLACK);
+
+            self.schedule.run_stage(Stage::Render, &mut self.context);
+            self.schedule.run_stage(Stage::PostRender, &mut self.context);
+
+            set_default_camera();
+
+            self.schedule.run_stage(Stage::GuiRender, &mut self.context);
+
+            next_frame().await;
+        }
+
+        despawn_splash_screen(&mut self.context);
+
         self.context.asset_server
             .load_assets_from_file("resources/assets.json")
             .await
