@@ -333,6 +333,7 @@ pub fn input_field_focus_system(ctx: &mut Context) {
         if Some(e) == clicked_entity {
             if !input_field.is_focused {
                 while get_char_pressed().is_some() {}
+                input_field.caret_position = input_field.text.chars().count()
             }
 
             input_field.is_focused = true;
@@ -349,50 +350,114 @@ pub fn input_field_typing_system(ctx: &mut Context) {
     const BACKSPACE_INITIAL_DELAY: f32 = 0.4;
     const BACKSPACE_REPEAT_RATE: f32 = 0.05;
 
-    for (_, input_field) in ctx.world.query::<&mut GuiInputField>().iter() {
+    for (_, (input_field, gui_box, font_opt)) in ctx.world.query::<(&mut GuiInputField, &GuiBox, Option<&FontComponent>)>().iter() {
         if !input_field.is_focused {
             input_field.backspace_repeat_timer = 0.0;
             continue;
         }
-        
-        let backspace_pressed = is_key_pressed(KeyCode::Backspace);
-        let backspace_down = is_key_down(KeyCode::Backspace);
 
-        if backspace_pressed {
-            input_field.text.pop();
-            input_field.backspace_repeat_timer = BACKSPACE_INITIAL_DELAY;
-            input_field.caret_visible = true;
-            input_field.caret_blink_timer = 0.0;
-        } else if backspace_down {
-            input_field.backspace_repeat_timer -= ctx.dt;
-
-            if input_field.backspace_repeat_timer <= 0.0 {
-                input_field.text.pop();
-                input_field.backspace_repeat_timer = BACKSPACE_REPEAT_RATE;
+        // --- GESTION DES FLÈCHES ---
+        if is_key_pressed(KeyCode::Left) {
+            if input_field.caret_position > 0 {
+                input_field.caret_position -= 1;
                 input_field.caret_visible = true;
                 input_field.caret_blink_timer = 0.0;
+            }
+        }
+        if is_key_pressed(KeyCode::Right) {
+            // On utilise chars().count() pour avoir le nombre réel de caractères
+            let text_len = input_field.text.chars().count();
+            if input_field.caret_position < text_len {
+                input_field.caret_position += 1;
+                input_field.caret_visible = true;
+                input_field.caret_blink_timer = 0.0;
+            }
+        }
+
+        // --- GESTION DU BACKSPACE (Suppression) ---
+        let backspace_pressed = is_key_pressed(KeyCode::Backspace);
+        let backspace_down = is_key_down(KeyCode::Backspace);
+        
+        let mut should_delete = false;
+        if backspace_pressed {
+            should_delete = true;
+            input_field.backspace_repeat_timer = BACKSPACE_INITIAL_DELAY;
+        } else if backspace_down {
+            input_field.backspace_repeat_timer -= ctx.dt;
+            if input_field.backspace_repeat_timer <= 0.0 {
+                should_delete = true;
+                input_field.backspace_repeat_timer = BACKSPACE_REPEAT_RATE;
             }
         } else {
             input_field.backspace_repeat_timer = 0.0;
         }
 
-        let mut char_typed = false;
+        if should_delete && input_field.caret_position > 0 {
+            // Suppression sécurisée UTF-8
+            let mut chars: Vec<char> = input_field.text.chars().collect();
+            if input_field.caret_position <= chars.len() {
+                chars.remove(input_field.caret_position - 1);
+                input_field.text = chars.into_iter().collect();
+                input_field.caret_position -= 1;
+                input_field.caret_visible = true;
+                input_field.caret_blink_timer = 0.0;
+            }
+        }
+        
+        // GESTION SUPPR (Delete) - Optionnel mais pratique
+        if is_key_pressed(KeyCode::Delete) {
+             let mut chars: Vec<char> = input_field.text.chars().collect();
+             if input_field.caret_position < chars.len() {
+                chars.remove(input_field.caret_position);
+                input_field.text = chars.into_iter().collect();
+                input_field.caret_visible = true;
+                input_field.caret_blink_timer = 0.0;
+             }
+        }
+
+        // --- GESTION DE LA SAISIE (Insertion) ---
         while let Some(char) = get_char_pressed() {
-            if char == '\u{08}' { 
+            if char == '\u{08}' || char == '\u{7f}' { // Backspace ou Delete (par sécurité)
                 continue; 
             }
 
-            let at_limit = input_field.max_chars.map_or(false, |max| input_field.text.len() >= max);
+            let char_count = input_field.text.chars().count();
+            let at_limit = input_field.max_chars.map_or(false, |max| char_count >= max);
         
             if !at_limit {
-                input_field.text.push(char);
-                char_typed = true;
+                // Insertion sécurisée UTF-8 à la position du curseur
+                let mut chars: Vec<char> = input_field.text.chars().collect();
+                // Sécurité : s'assurer que la position est valide
+                let insert_pos = input_field.caret_position.min(chars.len());
+                chars.insert(insert_pos, char);
+                input_field.text = chars.into_iter().collect();
+                
+                input_field.caret_position += 1;
+                input_field.caret_visible = true;
+                input_field.caret_blink_timer = 0.0;
             }
         }
 
-        if char_typed {
-            input_field.caret_visible = true;
-            input_field.caret_blink_timer = 0.0;
+        let font_to_use: Option<&Font> = font_opt.and_then(|f| ctx.asset_server.get_font(&f.0));
+
+        let text_before_caret: String = input_field.text.chars().take(input_field.caret_position).collect();
+        let caret_x_absolute = measure_text(&text_before_caret, font_to_use, input_field.font_size as u16, 1.0).width;
+
+        let visible_width = gui_box.width - (input_field.padding.x * 2.0);
+
+        if caret_x_absolute < input_field.scroll_offset {
+            input_field.scroll_offset = caret_x_absolute;
+        }
+
+        if caret_x_absolute > input_field.scroll_offset + visible_width {
+            input_field.scroll_offset = caret_x_absolute - visible_width;
+        }
+
+        let total_text_width = measure_text(&input_field.text, font_to_use, input_field.font_size as u16, 1.0).width;
+        if total_text_width < visible_width {
+             input_field.scroll_offset = 0.0;
+        } else if total_text_width - input_field.scroll_offset < visible_width {
+             input_field.scroll_offset = (total_text_width - visible_width).max(0.0);
         }
 
         input_field.caret_blink_timer += ctx.dt;
@@ -408,22 +473,58 @@ pub fn input_field_render_system(ctx: &mut Context) {
 
     for (_, (input_field, transform, gui_box, visibility, font_opt)) in query.iter() {
         let is_visible = visibility.map_or(true, |v| v.0);
-        if !is_visible {
+        if !is_visible { continue; }
+
+        if !gui_box.screen_space {
+            // This example only handles screen-space fields.
             continue;
         }
 
-        let text_x = transform.position.x + input_field.padding.x;
+        // Ensure integer, non-zero render target dimensions
+        let rt_w = (gui_box.width.max(1.0)) as u32;
+        let rt_h = (gui_box.height.max(1.0)) as u32;
 
-        let text_y_top = transform.position.y + (gui_box.height / 2.0) - (input_field.font_size / 2.0) + input_field.padding.y;
-    
-        let baseline_y = text_y_top + input_field.font_size;
+        // --- Create render target (temporary) ---
+        // For production: cache render targets in `ctx` keyed by (width,height) or entity.
+        let rt = render_target(rt_w, rt_h);
 
+        // --- Set up a Camera2D that renders into the RenderTarget ---
+        let camera = Camera2D {
+            render_target: Some(rt.clone()),
+            // we define the visible region to match the render target's size
+            // origin at (0, 0) top-left, with height inverted for standard coordinates
+            // (Macroquad y-axis goes down by default)
+            viewport: None,
+            zoom: vec2(2.0 / rt_w as f32, 2.0 / rt_h as f32),
+            target: vec2(rt_w as f32 / 2.0, rt_h as f32 / 2.0),
+            ..Default::default()
+        };
+
+        // Draw into the render target
+        // Set the camera associated with the render target so that coordinates are local to [0..rt_w] x [0..rt_h]
+        set_camera(&camera);
+
+        // Clear with transparent background
+        clear_background(Color::new(0.0, 0.0, 0.0, 0.0));
+
+        // Coordinates inside the render target:
+        // content_x is the left edge inside the RT where text starts (padding)
+        let content_x = input_field.padding.x;
+        // vertical centering approximation inside RT
+        let text_y_top = (rt_h as f32 - input_field.font_size) / 2.0;
+        let baseline_y = text_y_top + input_field.font_size * 0.8; // visual baseline estimate
+
+        // Adjust draw_x by the scroll offset (scrolling moves the text left)
+        let draw_x = content_x - input_field.scroll_offset;
+
+        // Choose font if any
         let font_to_use: Option<&Font> = font_opt.and_then(|f| ctx.asset_server.get_font(&f.0));
 
+        // Draw the input text inside the RT
         if let Some(font) = font_to_use {
             draw_text_ex(
                 &input_field.text,
-                text_x,
+                draw_x,
                 baseline_y,
                 TextParams {
                     font: Some(font),
@@ -432,31 +533,45 @@ pub fn input_field_render_system(ctx: &mut Context) {
                     ..Default::default()
                 }
             );
-        }
-        else {
+        } else {
             draw_text(
                 &input_field.text,
-                text_x,
+                draw_x,
                 baseline_y,
                 input_field.font_size,
                 input_field.color
             );
         }
 
+        // Draw caret inside the RT if focused
         if input_field.is_focused && input_field.caret_visible {
-            let text_dims = measure_text(&input_field.text, font_to_use, input_field.font_size as u16, 1.0);
-            
-            let caret_x = text_x + text_dims.width;
-            let caret_width = 2.0;
+            let text_before_caret: String = input_field.text.chars().take(input_field.caret_position).collect();
+            let caret_offset = measure_text(&text_before_caret, font_to_use, input_field.font_size as u16, 1.0).width;
+            let caret_x = draw_x + caret_offset;
 
             draw_rectangle(
                 caret_x,
                 text_y_top,
-                caret_width,
+                2.0, // cursor width
                 input_field.font_size,
                 input_field.color
             );
         }
+
+        // Done drawing to RT: restore default camera (the screen)
+        set_default_camera();
+
+        // Draw the RenderTarget texture onto the screen at the GUI box position.
+        // We use dest_size to keep the same logical size as the GUI box.
+        let draw_params = DrawTextureParams {
+            dest_size: Some(vec2(gui_box.width, gui_box.height)),
+            ..Default::default()
+        };
+
+        draw_texture_ex(&rt.texture, transform.position.x, transform.position.y, WHITE, draw_params);
+
+        // NOTE:
+        // `rt` will be dropped here at end of scope. If you cache RTs, don't drop them.
     }
 }
 

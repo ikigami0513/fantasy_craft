@@ -122,7 +122,9 @@ pub struct GuiInputField {
     pub font_size: f32,
     pub color: Color,
     pub backspace_repeat_timer: f32,
-    pub padding: Vec2
+    pub padding: Vec2,
+    pub caret_position: usize,
+    pub scroll_offset: f32
 }
 
 impl Default for GuiInputField {
@@ -136,7 +138,9 @@ impl Default for GuiInputField {
             font_size: 30.0,
             color: BLACK,
             backspace_repeat_timer: 0.0,
-            padding: vec2(0.0, 0.0)
+            padding: vec2(0.0, 0.0),
+            caret_position: 0,
+            scroll_offset: 0.0
         }
     }
 }
