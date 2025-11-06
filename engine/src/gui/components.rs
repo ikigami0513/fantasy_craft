@@ -124,7 +124,9 @@ pub struct GuiInputField {
     pub backspace_repeat_timer: f32,
     pub padding: Vec2,
     pub caret_position: usize,
-    pub scroll_offset: f32
+    pub scroll_offset: f32,
+    pub left_key_repeat_timer: f32,
+    pub right_key_repeat_timer: f32
 }
 
 impl Default for GuiInputField {
@@ -140,7 +142,9 @@ impl Default for GuiInputField {
             backspace_repeat_timer: 0.0,
             padding: vec2(0.0, 0.0),
             caret_position: 0,
-            scroll_offset: 0.0
+            scroll_offset: 0.0,
+            left_key_repeat_timer: 0.0,
+            right_key_repeat_timer: 0.0
         }
     }
 }

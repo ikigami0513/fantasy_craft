@@ -347,25 +347,64 @@ pub fn input_field_focus_system(ctx: &mut Context) {
 }
 
 pub fn input_field_typing_system(ctx: &mut Context) {
-    const BACKSPACE_INITIAL_DELAY: f32 = 0.4;
-    const BACKSPACE_REPEAT_RATE: f32 = 0.05;
+    const KEY_REPEAT_INITIAL_DELAY: f32 = 0.4;
+    const KEY_REPEAT_RATE: f32 = 0.05;
 
     for (_, (input_field, gui_box, font_opt)) in ctx.world.query::<(&mut GuiInputField, &GuiBox, Option<&FontComponent>)>().iter() {
         if !input_field.is_focused {
             input_field.backspace_repeat_timer = 0.0;
+            input_field.left_key_repeat_timer = 0.0;
+            input_field.right_key_repeat_timer = 0.0;
             continue;
         }
 
-        // --- GESTION DES FLÈCHES ---
-        if is_key_pressed(KeyCode::Left) {
-            if input_field.caret_position > 0 {
-                input_field.caret_position -= 1;
-                input_field.caret_visible = true;
-                input_field.caret_blink_timer = 0.0;
+        // --- GESTION FLÈCHE GAUCHE (avec répétition) ---
+        let left_pressed = is_key_pressed(KeyCode::Left);
+        let left_down = is_key_down(KeyCode::Left);
+        let mut move_left = false;
+
+        if left_pressed {
+            move_left = true;
+            input_field.left_key_repeat_timer = KEY_REPEAT_INITIAL_DELAY;
+        }
+        else if left_down {
+            input_field.left_key_repeat_timer -= ctx.dt;
+            if input_field.left_key_repeat_timer <= 0.0 {
+                move_left = true;
+                input_field.left_key_repeat_timer = KEY_REPEAT_RATE;
             }
         }
-        if is_key_pressed(KeyCode::Right) {
-            // On utilise chars().count() pour avoir le nombre réel de caractères
+        else {
+            input_field.left_key_repeat_timer = 0.0;
+        }
+
+        if move_left && input_field.caret_position > 0 {
+            input_field.caret_position -= 1;
+            input_field.caret_visible = true;
+            input_field.caret_blink_timer = 0.0;
+        }
+
+        // --- GESTION FLÈCHE DROITE (avec répétition) ---
+        let right_pressed = is_key_pressed(KeyCode::Right);
+        let right_down = is_key_down(KeyCode::Right);
+        let mut move_right = false;
+
+        if right_pressed {
+            move_right = true;
+            input_field.right_key_repeat_timer = KEY_REPEAT_INITIAL_DELAY;
+        }
+        else if right_down {
+            input_field.right_key_repeat_timer -= ctx.dt;
+            if input_field.right_key_repeat_timer <= 0.0 {
+                move_right = true;
+                input_field.right_key_repeat_timer = KEY_REPEAT_RATE;
+            }
+        }
+        else {
+            input_field.right_key_repeat_timer = 0.0;
+        }
+
+        if move_right {
             let text_len = input_field.text.chars().count();
             if input_field.caret_position < text_len {
                 input_field.caret_position += 1;
@@ -381,12 +420,12 @@ pub fn input_field_typing_system(ctx: &mut Context) {
         let mut should_delete = false;
         if backspace_pressed {
             should_delete = true;
-            input_field.backspace_repeat_timer = BACKSPACE_INITIAL_DELAY;
+            input_field.backspace_repeat_timer = KEY_REPEAT_INITIAL_DELAY;
         } else if backspace_down {
             input_field.backspace_repeat_timer -= ctx.dt;
             if input_field.backspace_repeat_timer <= 0.0 {
                 should_delete = true;
-                input_field.backspace_repeat_timer = BACKSPACE_REPEAT_RATE;
+                input_field.backspace_repeat_timer = KEY_REPEAT_RATE;
             }
         } else {
             input_field.backspace_repeat_timer = 0.0;
