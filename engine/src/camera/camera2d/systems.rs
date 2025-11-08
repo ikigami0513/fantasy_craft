@@ -15,7 +15,7 @@ pub fn update_camera(ctx: &mut Context) {
 
     let mut world_size: Option<Vec2> = None;
     for (_entity, (tilemap_comp, _main_map)) in ctx.world.query::<(&TileMapComponent, &MainTileMap)>().iter() {
-        if let Some(map) = ctx.asset_server.get_map(&tilemap_comp.name) {
+        if let Some(map) = ctx.asset_server.get_map(&tilemap_comp.0) {
             world_size = Some(Vec2::new(
                 map.width as f32 * map.tile_width as f32,
                 map.height as f32 * map.tile_height as f32

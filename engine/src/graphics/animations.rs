@@ -3,6 +3,7 @@ use macroquad::math::Vec2;
 
 use crate::core::plugins::Plugin;
 use crate::prelude::Stage;
+use crate::scene::scene_loader::ComponentLoader;
 use crate::{graphics::sprites::Spritesheet, prelude::Context};
 use crate::physics::components::Transform;
 
@@ -55,6 +56,19 @@ impl Animation {
 #[derive(Debug)]
 pub struct AnimationComponent(pub String);
 
+pub struct AnimationComponentLoader;
+
+impl ComponentLoader for AnimationComponentLoader {
+    fn load(&self, ctx: &mut Context, entity: hecs::Entity, data: &serde_json::Value) {
+        let animation_name: String = serde_json::from_value(data.clone())
+            .unwrap_or_default();
+
+        let component = AnimationComponent(animation_name);
+
+        ctx.world.insert_one(entity, component).expect("Failed to insert AnimationComponent");
+    }
+}
+
 pub fn update_animations(ctx: &mut Context) {
     for (_, animation_comp) in ctx.world.query::<&AnimationComponent>().iter() {
         if let Some(animation) = ctx.asset_server.get_animation_mut(&animation_comp.0) {
@@ -75,6 +89,9 @@ pub struct AnimationPlugin;
 
 impl Plugin for AnimationPlugin {
     fn build(&self, app: &mut crate::prelude::App) {
+        app.scene_loader
+            .register("AnimationComponent", Box::new(AnimationComponentLoader));
+
         app
             .add_system(Stage::Update, update_animations)
             .add_system(Stage::Render, animation_render_system);

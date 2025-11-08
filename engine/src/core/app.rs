@@ -8,11 +8,14 @@ use crate::core::asset_server::AssetServer;
 use crate::core::plugins::Plugin;
 use crate::graphics::splash_screen::{SplashScreenData, animate_splash_screen, despawn_splash_screen, setup_splash_screen};
 use crate::prelude::Spritesheet;
+use crate::scene::scene_loader::SceneLoader;
 
 pub struct App {
     pub context: Context,
     pub schedule: Schedule,
+    pub scene_loader: SceneLoader,
     pub window_conf: Conf,
+    pub scene_path: Option<String>,
     show_splash_screen: bool,
     splash_screen_logo: String,
     splash_screen_background_color: Color
@@ -31,10 +34,12 @@ impl App {
                 collision_events: Vec::new(),
                 prev_mouse_pos: Vec2::ZERO,
                 input_focus: InputFocus::default(),
-                splash_screen_data: None
+                splash_screen_data: None,
             },
             schedule: Schedule::new(),
+            scene_loader: SceneLoader::new(),
             window_conf: conf,
+            scene_path: None,
             show_splash_screen: true,
             splash_screen_logo: "resources/textures/logo_engine.png".to_string(),
             splash_screen_background_color: Color::new(1.0, 0.980392157, 0.960784314, 1.0)
@@ -53,6 +58,11 @@ impl App {
 
     pub fn with_splash_screen_background_color(&mut self, color: Color) -> &mut Self {
         self.splash_screen_background_color = color;
+        self
+    }
+
+    pub fn with_scene_path(&mut self, scene_path: String) -> &mut Self {
+        self.scene_path = Some(scene_path);
         self
     }
 
@@ -149,6 +159,10 @@ impl App {
         }
 
         self.context.asset_server.prepare_loaded_tiledmap().await;
+
+        if let Some(scene_path) = self.scene_path {
+            self.scene_loader.load_scene_from_file(&scene_path, &mut self.context).await.unwrap();
+        }
 
         // --- Démarrage du jeu ---
         self.schedule.run_stage(Stage::StartUp, &mut self.context);

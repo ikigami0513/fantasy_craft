@@ -19,33 +19,33 @@ pub fn movement_system(ctx: &mut Context) {
 
 pub fn physics_system(ctx: &mut Context) {
     // 1. Storage for integration/collision (needs references to RigiBody/Collider)
-    let mut entities: Vec<(Entity, Vec2, &mut RigidBody, &Collider)> = Vec::new();
+    let mut entities: Vec<(Entity, Vec2, &mut RigidBody, &Velocity, &Collider)> = Vec::new();
     
     // 2. Storage for final position updates (owned data)
     let mut position_updates: Vec<(hecs::Entity, Vec2)> = Vec::new();
 
     // The mutable query starts here and lasts until the end of the function, 
     // but we can break it down logically.
-    let mut query_borrow = ctx.world.query::<(&mut Transform, &mut RigidBody, &Collider)>();
+    let mut query_borrow = ctx.world.query::<(&mut Transform, &mut RigidBody, &Velocity, &Collider)>();
 
     // Phase 1: Read/Collect
-    for (entity, (transform, rigidbody, collider)) in query_borrow.iter() {
-        entities.push((entity, transform.position, rigidbody, collider));
+    for (entity, (transform, rigidbody, velocity, collider)) in query_borrow.iter() {
+        entities.push((entity, transform.position, rigidbody, velocity, collider));
     }
     // 'entities' now holds the necessary references. 'query_borrow' is still active.
 
     // Step 1: integrate motion (using the copied position in 'entities')
-    for (_, position, rb, _) in entities.iter_mut() {
+    for (_, position, rb, velocity, _) in entities.iter_mut() {
         if let BodyType::Dynamic = rb.body_type {
-            *position += rb.velocity * ctx.dt;
+            *position += velocity.0 * ctx.dt;
         }
     }
 
     // Step 2: collision resolution (using the copied position in 'entities')
     for i in 0..entities.len() {
         for j in (i + 1)..entities.len() {
-            let (_, pos_a, rb_a, col_a) = &entities[i];
-            let (_, pos_b, rb_b, col_b) = &entities[j];
+            let (_, pos_a, rb_a, _, col_a) = &entities[i];
+            let (_, pos_b, rb_b, _, col_b) = &entities[j];
 
             let iso_a = make_isometry(*pos_a);
             let iso_b = make_isometry(*pos_b);
@@ -87,7 +87,7 @@ pub fn physics_system(ctx: &mut Context) {
 
     // Step 3: Collect updates (The references are no longer needed)
     // We now fill the list of owned updates
-    for (entity, new_pos, _, _) in entities {
+    for (entity, new_pos, _, _, _) in entities {
         position_updates.push((entity, new_pos));
     }
     

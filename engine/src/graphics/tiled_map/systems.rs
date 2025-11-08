@@ -4,7 +4,7 @@ use crate::graphics::tiled_map::components::TileMapComponent;
 
 pub fn tilemap_render_system(ctx: &mut Context) {
     for (_, tileset_comp) in ctx.world.query::<&TileMapComponent>().iter() {
-        if let Some(rendered_map) = ctx.asset_server.get_renderer_map(&tileset_comp.name) {
+        if let Some(rendered_map) = ctx.asset_server.get_renderer_map(&tileset_comp.0) {
             draw_texture_ex(
                 &rendered_map.texture.texture,
                 0.0,

@@ -1,4 +1,4 @@
-use crate::{core::app::App, hierarchy::plugins::HierarchyPlugin, prelude::{AnimationPlugin, Camera2dPlugin, GuiPlugin, PhysicsPlugin, Stage, TiledMapPlugin, collider_debug_render_system}};
+use crate::{core::app::App, hierarchy::plugins::HierarchyPlugin, prelude::{AnimationPlugin, Camera2dPlugin, GuiPlugin, PhysicsPlugin, Stage, TiledMapPlugin, collider_debug_render_system}, utils::plugins::UtilsPlugin};
 
 pub trait Plugin {
     fn build(&self, app: &mut App);
@@ -9,6 +9,7 @@ pub struct Default2dPlugin;
 impl Plugin for Default2dPlugin {
     fn build(&self, app: &mut App) {
         app
+            .add_plugin(UtilsPlugin)
             .add_plugin(PhysicsPlugin)
             .add_plugin(Camera2dPlugin)
             .add_plugin(HierarchyPlugin)

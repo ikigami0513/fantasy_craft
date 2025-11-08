@@ -6,3 +6,4 @@ pub mod core;
 pub mod graphics;
 pub mod gui;
 pub mod hierarchy;
+pub mod scene;
