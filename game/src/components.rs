@@ -106,5 +106,35 @@ pub struct FpsDisplay {
     pub displayed_fps: i32
 }
 
+#[derive(Deserialize, Debug, Default)]
+pub struct FpsDisplayLoaderData {
+    pub fps_timer: f32,
+    pub displayed_fps: i32
+}
+
+pub struct FpsDisplayLoader;
+
+impl ComponentLoader for FpsDisplayLoader {
+    fn load(&self, ctx: &mut engine::prelude::Context, entity: hecs::Entity, data: &serde_json::Value) {
+        let loader_data: FpsDisplayLoaderData = serde_json::from_value(data.clone())
+            .unwrap_or_default();
+
+        let component = FpsDisplay {
+            fps_timer: loader_data.fps_timer,
+            displayed_fps: loader_data.displayed_fps
+        };
+
+        ctx.world.insert_one(entity, component).expect("Failed to insert FpsDisplay");
+    }
+}
+
 #[derive(Debug, Default)]
 pub struct ClickMeAction;
+
+pub struct ClickMeActionLoader;
+
+impl ComponentLoader for ClickMeActionLoader {
+    fn load(&self, ctx: &mut engine::prelude::Context, entity: hecs::Entity, _data: &serde_json::Value) {
+        ctx.world.insert_one(entity, ClickMeAction).expect("Failed to insert ClickMeAction");
+    }
+}

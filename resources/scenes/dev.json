@@ -150,6 +150,350 @@
                     "height": 20.0
                 }
             }
+        },
+        {
+            "id": "debug_panel",
+            "components": {
+                "Transform": {
+                    "position": {
+                        "x": 10.0,
+                        "y": 10.0
+                    },
+                    "rotation": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "scale": {
+                        "x": 1.0,
+                        "y": 1.0
+                    }
+                },
+                "GuiBox": {
+                    "width": 140.0,
+                    "height": 80.0,
+                    "color": {
+                        "r": 0.5,
+                        "g": 0.5,
+                        "b": 0.5,
+                        "a": 1.0
+                    },
+                    "border_radius": 10.0,
+                    "screen_space": true
+                },
+                "GuiDraggable": {
+                    "is_dragging": false
+                },
+                "Visible": true
+            }
+        },
+        {
+            "id": "debug_menu_title",
+            "components": {
+                "Transform": {
+                    "position": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "rotation": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "scale": {
+                        "x": 1.0,
+                        "y": 1.0
+                    }
+                },
+                "TextDisplay": {
+                    "text": "Debug Menu",
+                    "color": {
+                        "r": 1.0,
+                        "g": 1.0,
+                        "b": 1.0,
+                        "a": 1.0
+                    },
+                    "font_size": 20.0,
+                    "screen_space": true
+                },
+                "FontComponent": "roboto-regular",
+                "Parent": "debug_panel",
+                "LocalOffset": [5.0, 0.0]
+            }
+        },
+        {
+            "id": "fps_display",
+            "components": {
+                "Transform": {
+                    "position": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "rotation": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "scale": {
+                        "x": 1.0,
+                        "y": 1.0
+                    }
+                },
+                "FpsDisplay": {
+                    "fps_timer": 0.0,
+                    "displayed_fps": 60
+                },
+                "TextDisplay": {
+                    "text": "FPS: 60",
+                    "color": {
+                        "r": 1.0,
+                        "g": 1.0,
+                        "b": 1.0,
+                        "a": 1.0
+                    },
+                    "font_size": 20.0,
+                    "screen_space": true
+                },
+                "FontComponent": "roboto-regular",
+                "Parent": "debug_panel",
+                "LocalOffset": [5.0, 25.0]
+            }
+        },
+        {
+            "id": "slider",
+            "components": {
+                "Transform": {
+                    "position": {
+                        "x": 150.0,
+                        "y": 300.0
+                    },
+                    "rotation": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "scale": {
+                        "x": 0.0,
+                        "y": 0.0
+                    }
+                },
+                "GuiBox": {
+                    "width": 200.0,
+                    "height": 20.0,
+                    "color": {
+                        "r": 0.3,
+                        "g": 0.3,
+                        "b": 0.3,
+                        "a": 1.0
+                    },
+                    "border_radius": 10.0,
+                    "screen_space": true
+                },
+                "GuiSlider": {
+                    "value": 0.5,
+                    "min": 0.0,
+                    "max": 1.0,
+                    "is_dragging_handle": false,
+                    "handle_color": {
+                        "r": 0.78,
+                        "g": 0.78,
+                        "b": 0.78,
+                        "a": 1.0
+                    },
+                    "handle_width": 10.0
+                }
+            }
+        },
+        {
+            "id": "checkbox",
+            "components": {
+                "Transform": {
+                    "position": {
+                        "x": 150.0,
+                        "y": 150.0
+                    },
+                    "rotation": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "scale": {
+                        "x": 1.0,
+                        "y": 1.0
+                    }
+                },
+                "GuiBox": {
+                    "width": 25.0,
+                    "height": 25.0,
+                    "color": {
+                        "r": 0.0,
+                        "g": 0.0,
+                        "b": 0.0,
+                        "a": 1.0
+                    },
+                    "border_radius": 4.0,
+                    "screen_space": true
+                },
+                "GuiButton": {
+                    "normal_color": {
+                        "r": 0.9,
+                        "g": 0.9,
+                        "b": 0.9,
+                        "a": 1.0
+                    },
+                    "hovered_color": {
+                        "r": 1.0,
+                        "g": 1.0,
+                        "b": 1.0,
+                        "a": 1.0
+                    },
+                    "pressed_color": {
+                        "r": 0.8,
+                        "g": 0.8,
+                        "b": 0.8,
+                        "a": 1.0
+                    },
+                    "state": "idle",
+                    "just_clicked": false
+                },
+                "GuiCheckbox": {
+                    "is_checked": false
+                }
+            }
+        },
+        {
+            "id": "click_me_button",
+            "components": {
+                "Transform": {
+                    "position": {
+                        "x": 800.0,
+                        "y": 10.0
+                    },
+                    "rotation": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "scale": {
+                        "x": 1.0,
+                        "y": 1.0
+                    }
+                },
+                "GuiButton": {
+                    "normal_color": {
+                        "r": 0.20,
+                        "g": 0.45,
+                        "b": 0.85,
+                        "a": 1.0
+                    },
+                    "hovered_color": {
+                        "r": 0.25,
+                        "g": 0.55,
+                        "b": 0.95,
+                        "a": 1.0
+                    },
+                    "pressed_color": {
+                        "r": 0.15,
+                        "g": 0.35,
+                        "b": 0.75,
+                        "a": 1.0
+                    },
+                    "state": "idle",
+                    "just_clicked": false
+                },
+                "GuiBox": {
+                    "width": 120.0,
+                    "height": 30.0,
+                    "color": {
+                        "r": 0.0,
+                        "g": 0.0,
+                        "b": 0.0,
+                        "a": 1.0
+                    },
+                    "border_radius": 5.0,
+                    "screen_space": true
+                },
+                "ClickMeAction": {}
+            }
+        },
+        {
+            "id": "click_me_button_label",
+            "components": {
+                "Transform": {
+                    "position": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "rotation": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "scale": {
+                        "x": 1.0,
+                        "y": 1.0
+                    }
+                },
+                "LocalOffset": [20.0, 0.0],
+                "TextDisplay": {
+                    "text": "Click Me",
+                    "color": {
+                        "r": 1.0,
+                        "g": 1.0,
+                        "b": 1.0,
+                        "a": 1.0
+                    },
+                    "font_size": 20.0,
+                    "screen_space": true
+                },
+                "FontComponent": "roboto-regular",
+                "Parent": "click_me_button"
+            }
+        },
+        {
+            "id": "test_input_field",
+            "components": {
+                "Transform": {
+                    "position": {
+                        "x": 150.0,
+                        "y": 400.0
+                    },
+                    "rotation": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "scale": {
+                        "x": 1.0,
+                        "y": 1.0
+                    }
+                },
+                "GuiBox": {
+                    "width": 200.0,
+                    "height": 40.0,
+                    "color": {
+                        "r": 0.9,
+                        "g": 0.9,
+                        "b": 0.9,
+                        "a": 1.0
+                    },
+                    "border_radius": 5.0,
+                    "screen_space": true
+                },
+                "GuiInputField": {
+                    "text": "",
+                    "is_focused": false,
+                    "caret_blink_timer": 0.0,
+                    "caret_visible": false,
+                    "max_chars": null,
+                    "font_size": 28.0,
+                    "color": {
+                        "r": 0.0,
+                        "g": 0.0,
+                        "b": 0.0,
+                        "a": 1.0
+                    },
+                    "backspace_repeat_timer": 0.0,
+                    "padding": [0.0, 0.0],
+                    "caret_position": 0,
+                    "scroll_offset": 0.0,
+                    "left_key_repeat_timer": 0.0,
+                    "right_key_repeat_timer": 0.0
+                },
+                "FontComponent": "roboto-regular"
+            }
         }
     ]
 }

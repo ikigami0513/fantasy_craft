@@ -11,6 +11,12 @@ pub struct Vec2Data {
     pub y: f32
 }
 
+#[derive(Deserialize, Debug, Default)]
+pub struct UVec2Data {
+    pub x: u32,
+    pub y: u32
+}
+
 #[derive(Debug, Clone, Copy)]
 #[allow(dead_code)]
 pub struct Transform {
