@@ -42,11 +42,18 @@ struct AnimationData {
     flip: Option<bool>, 
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Default)]
 struct AssetFileData {
+    #[serde(default)]
     maps: Vec<MapData>,
+
+    #[serde(default)]
     fonts: Vec<FontData>,
+
+    #[serde(default)]
     spritesheets: Vec<SpritesheetData>,
+
+    #[serde(default)]
     animations: Vec<AnimationData>,
 }
 

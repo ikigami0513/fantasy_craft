@@ -22,9 +22,9 @@ pub fn find_children(world: &World, parent_id: Entity) -> Vec<Entity> {
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub struct LocalOffset(pub Vec2);
 
-pub struct LoacalOffsetLoader;
+pub struct LocalOffsetLoader;
 
-impl ComponentLoader for LoacalOffsetLoader {
+impl ComponentLoader for LocalOffsetLoader {
     fn load(&self, ctx: &mut crate::prelude::Context, entity: Entity, data: &serde_json::Value) {
         let (x, y): (f32, f32) = serde_json::from_value(data.clone())
             .unwrap_or((0.0, 0.0));

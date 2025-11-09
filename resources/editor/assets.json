@@ -1,0 +1,8 @@
+{
+    "fonts": [
+        {
+            "id": "roboto-regular",
+            "path": "resources/fonts/Roboto/static/Roboto-Regular.ttf"
+        }
+    ]
+}

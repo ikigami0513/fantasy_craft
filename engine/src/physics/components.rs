@@ -37,8 +37,13 @@ impl Default for Transform {
 
 #[derive(Deserialize, Debug, Default)]
 pub struct TransformLoaderData {
+    #[serde(default)]
     pub position: Vec2Data,
+
+    #[serde(default)]
     pub rotation: Vec2Data,
+
+    #[serde(default)]
     pub scale: Vec2Data
 }
 

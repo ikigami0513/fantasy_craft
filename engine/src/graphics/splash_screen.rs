@@ -1,5 +1,5 @@
 use macroquad::prelude::*;
-use crate::prelude::{Context, GuiBox, GuiImage, Transform};
+use crate::prelude::{Context, GuiBox, GuiImage, Transform, GuiDimension};
 
 #[derive(Debug)]
 pub struct SplashScreenData {
@@ -39,8 +39,8 @@ pub fn setup_splash_screen(ctx: &mut Context) {
             ..Default::default()
         },
         GuiBox {
-            width: logo_w,
-            height: logo_h,
+            width: GuiDimension::Pixels(logo_w),
+            height: GuiDimension::Pixels(logo_h),
             color,
             ..Default::default()
         },
