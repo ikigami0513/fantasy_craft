@@ -2,8 +2,7 @@ mod headers;
 
 use macroquad::prelude::*;
 use engine::prelude::*;
-use crate::headers::files_menu::FilesMenuPlugin;
-
+use crate::headers::plugin::HeadersPlugin;
 
 fn window_conf() -> Conf {
     Conf {
@@ -24,7 +23,7 @@ async fn main() {
         .with_assets_file("resources/editor/assets.json".to_string())
         .with_scene_path("resources/editor/scene.json".to_string())
         .add_plugin(Default2dPlugin)
-        .add_plugin(FilesMenuPlugin);
+        .add_plugin(HeadersPlugin);
 
     app.run().await;
 }

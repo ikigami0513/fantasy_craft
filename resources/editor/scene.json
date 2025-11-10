@@ -105,6 +105,78 @@
             }
         },
         {
+            "id": "settings_menu_button",
+            "components": {
+                "Transform": {},
+                "Parent": "editor_header",
+                "GuiLocalOffset": {
+                    "x": "6.5%",
+                    "y": "50%"
+                },
+                "GuiBox": {
+                    "width": "5%",
+                    "height": "3%",
+                    "color": {
+                        "r": 0.107,
+                        "g": 0.113,
+                        "b": 0.132,
+                        "a": 1.0
+                    },
+                    "border_radius": 10.0,
+                    "screen_space": true
+                },
+                "GuiButton": {
+                    "normal_color": {
+                        "r": 0.107,
+                        "g": 0.113,
+                        "b": 0.132,
+                        "a": 1.0
+                    },
+                    "hovered_color": {
+                        "r": 0.181,
+                        "g": 0.192,
+                        "b": 0.222,
+                        "a": 1.0
+                    },
+                    "pressed_color": {
+                        "r": 0.206,
+                        "g": 0.222,
+                        "b": 0.262,
+                        "a": 1.0
+                    },
+                    "state": "idle",
+                    "just_clicked": false
+                },
+                "VerticalAlignment": "center",
+                "SettingsMenuButton": {}
+            }
+        },
+        {
+            "id": "settings_menu_button_label",
+            "components": {
+                "Transform": {},
+                "Parent": "settings_menu_button",
+                "TextDisplay": {
+                    "text": "Settings",
+                    "color": {
+                        "r": 1.0,
+                        "g": 1.0,
+                        "b": 1.0,
+                        "a": 1.0
+                    },
+                    "font_size": 15.0,
+                    "screen_space": true
+                },
+                "FontComponent": "roboto-regular",
+                "GuiLocalOffset": {
+                    "x": "50%",
+                    "y": "0%"
+                },
+                "VerticalAlignment": "center",
+                "HorizontalAlignment": "center"
+            }
+        },
+        {
             "id": "scene_hierarchy_panel",
             "components": {
                 "Transform": {
@@ -127,7 +199,7 @@
                 },
                 "GuiBox": {
                     "width": "20%",
-                    "height": "75%",
+                    "height": "60%",
                     "color": {
                         "r": 0.181,
                         "g": 0.192,
@@ -163,7 +235,7 @@
                 },
                 "GuiBox": {
                     "width": "20%",
-                    "height": "75%",
+                    "height": "60%",
                     "color": {
                         "r": 0.181,
                         "g": 0.192,
@@ -195,11 +267,11 @@
                 },
                 "GuiLayout": {
                     "x": 0.0,
-                    "y": "80%"
+                    "y": "65%"
                 },
                 "GuiBox": {
                     "width": "100%",
-                    "height": "20%",
+                    "height": "35%",
                     "color": {
                         "r": 0.181,
                         "g": 0.192,
