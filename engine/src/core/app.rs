@@ -3,11 +3,11 @@ use macroquad::prelude::*;
 use futures::{FutureExt, future::BoxFuture};
 use crate::core::context::Context;
 use crate::core::focus::InputFocus;
-use crate::core::schedule::{Schedule, Stage, System};
+use crate::core::schedule::{Schedule, Stage};
 use crate::core::asset_server::AssetServer;
 use crate::core::plugins::Plugin;
 use crate::graphics::splash_screen::{SplashScreenData, animate_splash_screen, despawn_splash_screen, setup_splash_screen};
-use crate::prelude::Spritesheet;
+use crate::prelude::{GameState, Spritesheet, System};
 use crate::scene::scene_loader::SceneLoader;
 
 pub struct App {
@@ -37,7 +37,7 @@ impl App {
                 input_focus: InputFocus::default(),
                 splash_screen_data: None,
             },
-            schedule: Schedule::new(),
+            schedule: Schedule::new(GameState::Playing),
             scene_loader: SceneLoader::new(),
             window_conf: conf,
             scene_path: None,

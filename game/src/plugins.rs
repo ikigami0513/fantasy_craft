@@ -13,8 +13,14 @@ impl Plugin for PlayerPlugin {
             .register("NpcTag", Box::new(NpcTagLoader));
 
         app
-            .add_system(Stage::Update, player_update)
-            .add_system(Stage::PostUpdate, check_player_npc_collision);
+            .add_system(Stage::Update, System::new(
+                player_update,
+                vec![GameState::Playing]
+            ))
+            .add_system(Stage::PostUpdate, System::new(
+                check_player_npc_collision,
+                vec![GameState::Playing]
+            ));
     }
 }
 
@@ -23,6 +29,9 @@ pub struct NpcPlugin;
 impl Plugin for NpcPlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_system(Stage::Update, npc_behavior_system);
+            .add_system(Stage::Update, System::new(
+                npc_behavior_system,
+                vec![GameState::Playing]
+            ));
     }
 }

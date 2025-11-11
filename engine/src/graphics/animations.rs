@@ -2,7 +2,7 @@ use std::sync::Arc;
 use macroquad::math::Vec2;
 
 use crate::core::plugins::Plugin;
-use crate::prelude::Stage;
+use crate::prelude::{GameState, Stage, System};
 use crate::scene::scene_loader::ComponentLoader;
 use crate::{graphics::sprites::Spritesheet, prelude::Context};
 use crate::physics::components::Transform;
@@ -93,7 +93,13 @@ impl Plugin for AnimationPlugin {
             .register("AnimationComponent", Box::new(AnimationComponentLoader));
 
         app
-            .add_system(Stage::Update, update_animations)
-            .add_system(Stage::Render, animation_render_system);
+            .add_system(Stage::Update, System::new(
+                update_animations,
+                vec![GameState::Playing]
+            ))
+            .add_system(Stage::Render, System::new(
+                animation_render_system,
+                vec![GameState::Playing]
+            ));
     }
 }

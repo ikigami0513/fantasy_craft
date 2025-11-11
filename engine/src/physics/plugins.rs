@@ -1,4 +1,4 @@
-use crate::{core::plugins::Plugin, physics::systems::physics_system, prelude::{ColliderLoader, RigidBodyLoader, SpeedLoader, Stage, TransformLoader, VelocityLoader, movement_system}};
+use crate::{core::plugins::Plugin, physics::systems::physics_system, prelude::{ColliderLoader, GameState, RigidBodyLoader, SpeedLoader, Stage, System, TransformLoader, VelocityLoader, movement_system}};
 
 pub struct PhysicsPlugin;
 
@@ -12,7 +12,13 @@ impl Plugin for PhysicsPlugin {
             .register("Speed", Box::new(SpeedLoader));
 
         app
-            .add_system(Stage::Update, movement_system)
-            .add_system(Stage::PostUpdate, physics_system);
+            .add_system(Stage::Update, System::new(
+                movement_system,
+                vec![GameState::Playing]
+            ))
+            .add_system(Stage::PostUpdate, System::new(
+                physics_system,
+                vec![GameState::Playing]
+            ));
     }
 }

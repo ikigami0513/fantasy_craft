@@ -1,4 +1,4 @@
-use crate::{core::plugins::Plugin, prelude::{CameraComponentLoader, CameraTargetLoader, MainCameraLoader, Stage, update_camera}};
+use crate::{core::plugins::Plugin, prelude::{CameraComponentLoader, CameraTargetLoader, GameState, MainCameraLoader, Stage, System, update_camera}};
 
 pub struct Camera2dPlugin;
 
@@ -10,6 +10,9 @@ impl Plugin for Camera2dPlugin {
             .register("CameraTarget", Box::new(CameraTargetLoader));
 
         app
-            .add_system(Stage::PostUpdate, update_camera);
+            .add_system(Stage::PostUpdate, System::new(
+                update_camera,
+                vec![GameState::Playing]
+            ));
     }
 }

@@ -34,9 +34,13 @@ async fn main() {
         .add_plugin(DebugPlugin)
         .add_plugin(PlayerPlugin)
         .add_plugin(NpcPlugin)
-        // .add_system(Stage::StartUp, setup_ui)
-        .add_system(Stage::Update, fps_display_update)
-        .add_system(Stage::Update, click_me_system);
+        .add_system(Stage::Update, System::new(
+            fps_display_update,
+            vec![GameState::Playing]
+        ))
+        .add_system(Stage::Update, System::new(
+            click_me_system, vec![GameState::Playing]
+        ));
 
     app.run().await
 }

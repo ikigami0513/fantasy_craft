@@ -1,9 +1,8 @@
 [workspace]
 resolver = "3"
-members = ["editor",
+members = [
     "engine",
     "game",
-    "editor"
 ]
 
 [workspace.dependencies]
