@@ -11,6 +11,18 @@ pub struct EntityData {
 }
 
 #[derive(Deserialize, Debug)]
+pub struct ImportData {
+    pub import: String
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(untagged)]
+pub enum SceneEntry {
+    Entity(EntityData),
+    Import(ImportData)
+}
+
+#[derive(Deserialize, Debug)]
 pub struct SceneFile {
-    pub entities: Vec<EntityData>
+    pub entities: Vec<SceneEntry>
 }

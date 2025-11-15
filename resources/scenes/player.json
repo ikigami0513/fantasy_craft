@@ -1,0 +1,83 @@
+{
+    "entities": [
+        {
+            "id": "player",
+            "components": {
+                "Transform": {
+                    "position": {
+                        "x": 2048,
+                        "y": 2048
+                    },
+                    "rotation": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "scale": {
+                        "x": 1.0,
+                        "y": 1.0
+                    }
+                },
+                "Velocity": [0.0, 0.0],
+                "Speed": 100.0,
+                "DirectionComponent": "down",
+                "StateComponent": "idle",
+                "PlayerTag": {},
+                "CameraTarget": {},
+                "RigidBody": {
+                    "body_type": "dynamic"
+                },
+                "Collider": {
+                    "shape": "Box",
+                    "width": 16.0,
+                    "height": 20.0
+                }
+            }
+        },
+        {
+            "id": "player_base",
+            "components": {
+                "Transform": {
+                    "position": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "rotation": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "scale": {
+                        "x": 1.0,
+                        "y": 1.0
+                    }
+                },
+                "AnimationPrefix": "player_base",
+                "AnimationComponent": "player_base_idle_down",
+                "Parent": "player",
+                "LocalOffset": [0.0, 0.0]
+            }
+        },
+        {
+            "id": "player_hand",
+            "components": {
+                "Transform": {
+                    "position": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "rotation": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "scale": {
+                        "x": 1.0,
+                        "y": 1.0
+                    }
+                },
+                "AnimationPrefix": "player_hand",
+                "AnimationComponent": "player_hand_idle_down",
+                "Parent": "player",
+                "LocalOffset": [0.0, 0.0]
+            }
+        }
+    ]
+}
