@@ -1,5 +1,4 @@
-use std::collections::HashMap;
-
+use std::collections::HashSet;
 use hecs::Entity;
 use macroquad::prelude::*;
 use crate::core::context::Context;
@@ -7,62 +6,124 @@ use crate::gui::components::{TextDisplay, GuiBox};
 use crate::physics::components::Transform;
 use crate::prelude::{ButtonState, FontComponent, GuiButton, GuiCheckbox, GuiDraggable, GuiImage, GuiInputField, GuiLayout, GuiLocalOffset, GuiSlider, HorizontalAlignment, HorizontalAlignmentType, Parent, VerticalAlignment, VerticalAlignmentType, Visible};
 
-pub fn gui_layout_system(ctx: &mut Context) {
+pub fn gui_resolve_layout_system(ctx: &mut Context) {
     let (screen_w, screen_h) = (screen_width(), screen_height());
     
-    let mut query = ctx.world.query::<(&GuiLayout, &mut Transform)>();
-    
-    for (_, (layout, transform)) in query.iter() {
-        let final_x = layout.x.resolve(screen_w);
-        let final_y = layout.y.resolve(screen_h);
+    // Clear the map from the previous frame
+    ctx.ui_resolved_rects.clear();
+
+    // 1. Get all children
+    let mut entities: HashSet<Entity> = ctx.world.query::<&Parent>()
+        .iter()
+        .map(|(e, _)| e)
+        .collect();
         
-        transform.position.x = final_x;
-        transform.position.y = final_y;
-    }
-}
+    // 2. Get all roots (Entities with GuiBox but NO Parent)
+    entities.extend(
+        ctx.world.query::<&GuiBox>().without::<&Parent>()
+            .iter()
+            .map(|(e, _)| e)
+    );
 
-pub fn gui_hierarchy_transform_update_system(ctx: &mut Context) {
-    let (screen_w, screen_h) = (screen_width(), screen_height());
+    let mut entities_to_process: Vec<Entity> = entities.into_iter().collect();
+    let mut iterations = 0; // Failsafe
     
-    let mut parent_rects = HashMap::new();
-    
-    for (entity, (transform, gui_box)) in ctx.world.query::<(&Transform, &GuiBox)>().iter() {
-        let rect = (
-            transform.position, // Position (déjà calculée par gui_layout_system)
-            vec2(
-                gui_box.width.resolve(screen_w),
-                gui_box.height.resolve(screen_h)
-            ) // Taille résolue en pixels
-        );
-        parent_rects.insert(entity, rect);
-    }
+    while !entities_to_process.is_empty() && iterations < 10 {
+        let mut processed_this_iteration = Vec::new();
 
-    let mut query = ctx.world.query::<(&mut Transform, &Parent, &GuiLocalOffset)>();
-    
-    for (_, (child_transform, parent, local_offset)) in query.iter() {
-        if let Some(&(parent_pos, parent_size)) = parent_rects.get(&parent.0) {
+        entities_to_process.retain(|&entity| {
+            // --- FIX: Dereference `entity` to `*entity` ---
+            let parent_opt = ctx.world.get::<&Parent>(entity).ok();
+
+            // Determine the "context"
+            let (parent_w, parent_h, parent_pos) = 
+                // --- FIX: Use `.as_ref()` to borrow, not move ---
+                if let Some(parent) = parent_opt.as_ref() { 
+                    if let Some((pos, size)) = ctx.ui_resolved_rects.get(&parent.0) {
+                        (size.x, size.y, *pos)
+                    } else {
+                        return true; // Keep
+                    }
+                } else {
+                    // No parent, resolve against screen
+                    if let Ok(layout) = ctx.world.get::<&GuiLayout>(entity) {
+                        let root_x = layout.x.resolve(screen_w);
+                        let root_y = layout.y.resolve(screen_h);
+                        (screen_w, screen_h, vec2(root_x, root_y))
+                    } else {
+                        // Use (0,0) as base for non-layout roots
+                        (screen_w, screen_h, Vec2::ZERO)
+                    }
+                };
+
+            // 1. Resolve Size
+            let resolved_size = if let Ok(gui_box) = ctx.world.get::<&GuiBox>(entity) {
+                vec2(gui_box.width.resolve(parent_w), gui_box.height.resolve(parent_h))
+            } else {
+                Vec2::ZERO
+            };
+
+            // 2. Resolve Position
+            let mut resolved_pos;
+            // --- FIX: Use `.as_ref()` or `.is_some()` ---
+            if parent_opt.is_some() {
+                // Child Logic: use parent pos + local offset
+                resolved_pos = parent_pos;
+                if let Ok(local_offset) = ctx.world.get::<&GuiLocalOffset>(entity) {
+                    resolved_pos.x += local_offset.x.resolve(parent_w);
+                    resolved_pos.y += local_offset.y.resolve(parent_h);
+                }
+            } else {
+                // Root Logic
+                if let Ok(layout) = ctx.world.get::<&GuiLayout>(entity) {
+                    resolved_pos = vec2(layout.x.resolve(screen_w), layout.y.resolve(screen_h));
+                } else if let Ok(transform) = ctx.world.get::<&Transform>(entity) {
+                    resolved_pos = transform.position;
+                } else {
+                    resolved_pos = Vec2::ZERO; // Fallback
+                }
+            }
             
-            let offset_x = local_offset.x.resolve(parent_size.x);
-            let offset_y = local_offset.y.resolve(parent_size.y);
+            // 3. Store the final rect
+            ctx.ui_resolved_rects.insert(entity, (resolved_pos, resolved_size));
             
-            child_transform.position.x = parent_pos.x + offset_x;
-            child_transform.position.y = parent_pos.y + offset_y;
+            // 4. Update the entity's Transform component
+            // --- FIX: Re-add GuiDraggable check ---
+            let is_dragging = ctx.world.get::<&GuiDraggable>(entity)
+                .map_or(false, |d| d.is_dragging);
+
+            if !is_dragging {
+                if let Ok(mut transform) = ctx.world.get::<&mut Transform>(entity) {
+                    transform.position = resolved_pos;
+                }
+            }
+
+            processed_this_iteration.push(entity);
+            false // Remove from entities_to_process
+        });
+
+        // Failsafe check
+        if processed_this_iteration.is_empty() && !entities_to_process.is_empty() {
+            break;
         }
+        iterations += 1;
     }
 }
-
 
 pub fn button_interaction_system(ctx: &mut Context) {
     let (mouse_x, mouse_y) = mouse_position();
     let is_pressed = is_mouse_button_down(MouseButton::Left);
     let just_clicked = is_mouse_button_pressed(MouseButton::Left);
 
-    // On récupère les dimensions de l'écran
-    let (screen_w, screen_h) = (screen_width(), screen_height());
+    let mut query = ctx.world.query::<(
+        &mut GuiButton, 
+        &GuiBox, 
+        Option<&Visible>, 
+        Option<&HorizontalAlignment>, 
+        Option<&VerticalAlignment>
+    )>();
 
-    let mut query = ctx.world.query::<(&mut GuiButton, &Transform, &GuiBox, Option<&Visible>, Option<&HorizontalAlignment>, Option<&VerticalAlignment>)>();
-
-    for (_, (button, transform, gui_box, visibility, h_align, v_align)) in query.iter() {
+    for (entity, (button, gui_box, visibility, h_align, v_align)) in query.iter() {
         let is_visible = visibility.map_or(true, |v| v.0);
 
         if !is_visible {
@@ -71,14 +132,19 @@ pub fn button_interaction_system(ctx: &mut Context) {
 
         button.just_clicked = false;
 
+        let (resolved_pos, resolved_size) = 
+            if let Some(rect) = ctx.ui_resolved_rects.get(&entity) {
+                *rect
+            } else {
+                continue; // Not processed by layout system
+            };
+
         if !gui_box.screen_space { continue; }
 
-        let mut x = transform.position.x;
-        let mut y = transform.position.y;
-        
-        // On résout les dimensions en pixels
-        let w = gui_box.width.resolve(screen_w);
-        let h = gui_box.height.resolve(screen_h);
+        let mut x = resolved_pos.x;
+        let mut y = resolved_pos.y;
+        let w = resolved_size.x;
+        let h = resolved_size.y;
 
         if let Some(h_align) = h_align {
             match h_align.0 {
@@ -128,65 +194,114 @@ pub fn button_interaction_system(ctx: &mut Context) {
 }
 
 pub fn gui_box_render_system(ctx: &mut Context) {
-    // On récupère les dimensions de l'écran
-    let (screen_w, screen_h) = (screen_width(), screen_height());
+    let mut query = ctx.world.query::<(
+        &GuiBox,
+        // &Transform, // We no longer read the transform, we get pos from our map
+        Option<&GuiButton>,
+        Option<&Visible>,
+        Option<&HorizontalAlignment>,
+        Option<&VerticalAlignment>,
+    )>();
 
-    for (_, (gui_box, transform, button_opt, visibility, h_align, v_align)) in ctx.world.query::<(&GuiBox, &Transform, Option<&GuiButton>, Option<&Visible>, Option<&HorizontalAlignment>, Option<&VerticalAlignment>)>().iter() {
+    // We iterate over entities using .iter() to get the entity ID
+    for (entity, (gui_box, button_opt, visibility, h_align, v_align)) in query.iter() {
         let is_visible = visibility.map_or(true, |v| v.0);
-
-        if !is_visible {
+        if !is_visible || !gui_box.screen_space {
             continue;
         }
 
-        if !gui_box.screen_space {
-            continue;
-        }
+        // --- THE BIG CHANGE ---
+        // Get the resolved position and size from the context map
+        let (resolved_pos, resolved_size) = 
+            if let Some(rect) = ctx.ui_resolved_rects.get(&entity) {
+                *rect // Dereference the tuple (pos, size)
+            } else {
+                continue; // This UI element was not processed by the layout system
+            };
 
-        let mut x = transform.position.x;
-        let mut y = transform.position.y;
-        
-        // On résout les dimensions en pixels
-        let w = gui_box.width.resolve(screen_w);
-        let h = gui_box.height.resolve(screen_h);
+        let mut x = resolved_pos.x;
+        let mut y = resolved_pos.y;
+        let w = resolved_size.x;
+        let h = resolved_size.y;
+        // --- END OF CHANGE ---
 
+
+        // --- Handle Alignment ---
+        // (This logic is now applied *after* an element's position
+        // has already been calculated. This is correct.)
         if let Some(h_align) = h_align {
             match h_align.0 {
-                HorizontalAlignmentType::Left => { /* Comportement par défaut */ }
+                HorizontalAlignmentType::Left => { /* Default */ }
                 HorizontalAlignmentType::Center => x -= w / 2.0,
                 HorizontalAlignmentType::Right => x -= w,
             }
         }
-        
         if let Some(v_align) = v_align {
             match v_align.0 {
-                VerticalAlignmentType::Top => { /* Comportement par défaut */ }
+                VerticalAlignmentType::Top => { /* Default */ }
                 VerticalAlignmentType::Center => y -= h / 2.0,
                 VerticalAlignmentType::Bottom => y -= h,
             }
         }
         
-        // Le reste de la logique utilise w et h, qui sont maintenant résolus
         let radius = gui_box.border_radius.min(w / 2.0).min(h / 2.0);
 
-        let mut color = gui_box.color;
+        // Determine the final color
+        let mut final_color = gui_box.color;
         if let Some(button) = button_opt {
-            color = match button.state {
+            final_color = match button.state {
                 ButtonState::Hovered => button.hovered_color,
                 ButtonState::Pressed => button.pressed_color,
                 ButtonState::Idle => button.normal_color
             };
         }
 
+        // --- MANUAL DRAWING LOGIC (Using RenderTarget) ---
         if radius == 0.0 {
-            draw_rectangle(x, y, w, h, color);
+            draw_rectangle(x, y, w, h, final_color);
         } else {
-            draw_rectangle(x + radius, y, w - radius * 2.0, h, color);
-            draw_rectangle(x, y + radius, radius, h - radius * 2.0, color);
-            draw_rectangle(x + w - radius, y + radius, radius, h - radius * 2.0, color);
-            draw_circle(x + radius, y + radius, radius, color);
-            draw_circle(x + w - radius, y + radius, radius, color);
-            draw_circle(x + radius, y + h - radius, radius, color);
-            draw_circle(x + w - radius, y + h - radius, radius, color);
+            // 1. Create an opaque version
+            let opaque_color = Color::new(final_color.r, final_color.g, final_color.b, 1.0);
+
+            // 2. Create the render target
+            let rt_w = w.max(1.0) as u32;
+            let rt_h = h.max(1.0) as u32;
+            let rt = render_target(rt_w, rt_h);
+            rt.texture.set_filter(FilterMode::Nearest);
+
+            // 3. Set up a camera
+            let camera = Camera2D {
+                render_target: Some(rt.clone()),
+                zoom: vec2(2.0 / rt_w as f32, 2.0 / rt_h as f32),
+                target: vec2(rt_w as f32 / 2.0, rt_h as f32 / 2.0),
+                ..Default::default()
+            };
+            set_camera(&camera);
+
+            // 4. Draw the 7 shapes (OPAQUE) at (0, 0)
+            clear_background(BLANK);
+            draw_rectangle(radius, 0.0, w - radius * 2.0, h, opaque_color);
+            draw_rectangle(0.0, radius, radius, h - radius * 2.0, opaque_color);
+            draw_rectangle(w - radius, radius, radius, h - radius * 2.0, opaque_color);
+            draw_circle(radius, radius, radius, opaque_color);
+            draw_circle(w - radius, radius, radius, opaque_color);
+            draw_circle(radius, h - radius, radius, opaque_color);
+            draw_circle(w - radius, h - radius, radius, opaque_color);
+
+            // 5. Restore the default camera
+            set_default_camera();
+
+            // 6. Draw the RenderTarget to the screen at its final, aligned position
+            draw_texture_ex(
+                &rt.texture,
+                x, // Use the aligned x
+                y, // Use the aligned y
+                final_color, // Use the original color (with alpha)
+                DrawTextureParams {
+                    dest_size: Some(vec2(w, h)),
+                    ..Default::default()
+                },
+            );
         }
     }
 }
@@ -267,17 +382,21 @@ pub fn draggable_system(ctx: &mut Context) {
     let is_pressed = is_mouse_button_pressed(MouseButton::Left);
     let is_down = is_mouse_button_down(MouseButton::Left);
 
-    // On récupère les dimensions de l'écran
-    let (screen_w, screen_h) = (screen_width(), screen_height());
-
     let mut query = ctx.world.query::<(&mut GuiDraggable, &mut Transform, &GuiBox, Option<&Visible>)>();
 
-    for (_, (draggable, transform, gui_box, visibility)) in query.iter() {
+    for (entity, (draggable, transform, _gui_box, visibility)) in query.iter() {
         let is_visible = visibility.map_or(true, |v| v.0);
 
         if !is_visible {
             continue;
         }
+
+        let (_resolved_pos, resolved_size) = 
+            if let Some(rect) = ctx.ui_resolved_rects.get(&entity) {
+                *rect
+            } else {
+                continue; // Not processed by layout system
+            };
 
         if draggable.is_dragging {
             if !is_down {
@@ -291,8 +410,8 @@ pub fn draggable_system(ctx: &mut Context) {
             let y = transform.position.y;
 
             // On résout les dimensions en pixels
-            let w = gui_box.width.resolve(screen_w);
-            let h = gui_box.height.resolve(screen_h);
+            let w = resolved_size.x;
+            let h = resolved_size.y;
 
             let is_hovered = mouse_x >= x && mouse_x <= (x + w) && mouse_y >= y && mouse_y <= (y + h);
 
@@ -308,24 +427,26 @@ pub fn slider_interaction_system(ctx: &mut Context) {
     let is_pressed = is_mouse_button_pressed(MouseButton::Left);
     let is_down = is_mouse_button_down(MouseButton::Left);
 
-    // On récupère les dimensions de l'écran
-    let (screen_w, screen_h) = (screen_width(), screen_height());
+    let mut query = ctx.world.query::<(&mut GuiSlider, &GuiBox, Option<&Visible>)>();
 
-    let mut query = ctx.world.query::<(&mut GuiSlider, &Transform, &GuiBox, Option<&Visible>)>();
-
-    for (_, (slider, transform, gui_box, visibility)) in query.iter() {
+    for (entity, (slider, _gui_box, visibility)) in query.iter() {
         let is_visible = visibility.map_or(true, |v| v.0);
 
         if !is_visible {
             continue;
         }
 
-        let x = transform.position.x;
-        let y = transform.position.y;
-        
-        // On résout les dimensions en pixels
-        let w = gui_box.width.resolve(screen_w);
-        let h = gui_box.height.resolve(screen_h);
+        let (resolved_pos, resolved_size) = 
+            if let Some(rect) = ctx.ui_resolved_rects.get(&entity) {
+                *rect
+            } else {
+                continue;
+            };
+
+        let x = resolved_pos.x;
+        let y = resolved_pos.y;
+        let w = resolved_size.x;
+        let h = resolved_size.y;
         
         let is_hovered = mouse_x >= x && mouse_x <= (x + w) && mouse_y >= y && mouse_y <= (y + h);
 
@@ -349,32 +470,37 @@ pub fn slider_interaction_system(ctx: &mut Context) {
 }
 
 pub fn slider_render_system(ctx: &mut Context) {
-    // On récupère les dimensions de l'écran
-    let (screen_w, screen_h) = (screen_width(), screen_height());
+    let mut query = ctx.world.query::<(&GuiSlider, &GuiBox, Option<&Visible>)>();
 
-    let mut query = ctx.world.query::<(&GuiSlider, &Transform, &GuiBox, Option<&Visible>)>();
-
-    for (_, (slider, transform, gui_box, visibility)) in query.iter() {
+    for (entity, (slider, _gui_box, visibility)) in query.iter() {
         let is_visible = visibility.map_or(true, |v| v.0);
 
         if !is_visible {
             continue;
         }
 
-        // On résout les dimensions en pixels
-        let w = gui_box.width.resolve(screen_w);
-        let h = gui_box.height.resolve(screen_h);
+        let (resolved_pos, resolved_size) = 
+            if let Some(rect) = ctx.ui_resolved_rects.get(&entity) {
+                *rect
+            } else {
+                continue;
+            };
+
+        let x = resolved_pos.x;
+        let y = resolved_pos.y;
+        let w = resolved_size.x;
+        let h = resolved_size.y;
 
         let normalized_value = (slider.value - slider.min) / (slider.max - slider.min).max(f32::EPSILON);
         let handle_width = slider.handle_width;
         
         // w est maintenant résolu
-        let handle_x = transform.position.x + (normalized_value * w) - (handle_width / 2.0);
+        let handle_x = x + (normalized_value * w) - (handle_width / 2.0);
 
         draw_rectangle(
             // w est maintenant résolu
-            handle_x.clamp(transform.position.x, transform.position.x + w - handle_width),
-            transform.position.y,
+            handle_x.clamp(x, x + w - handle_width),
+            y,
             handle_width,
             h, // h est maintenant résolu
             slider.handle_color
@@ -400,12 +526,9 @@ pub fn checkbox_logic_system(ctx: &mut Context) {
 }
 
 pub fn checkbox_render_system(ctx: &mut Context) {
-    // On récupère les dimensions de l'écran
-    let (screen_w, screen_h) = (screen_width(), screen_height());
+    let mut query = ctx.world.query::<(&GuiCheckbox, &GuiBox, Option<&Visible>)>();
 
-    let mut query = ctx.world.query::<(&GuiCheckbox, &Transform, &GuiBox, Option<&Visible>)>();
-
-    for (_, (checkbox, transform, gui_box, visibility)) in query.iter() {
+    for (entity, (checkbox, _gui_box, visibility)) in query.iter() {
         let is_visible = visibility.map_or(true, |v| v.0);
 
         if !is_visible {
@@ -413,12 +536,17 @@ pub fn checkbox_render_system(ctx: &mut Context) {
         }
 
         if checkbox.is_checked {
-            let x = transform.position.x;
-            let y = transform.position.y;
-            
-            // On résout les dimensions en pixels
-            let w = gui_box.width.resolve(screen_w);
-            let h = gui_box.height.resolve(screen_h);
+            let (resolved_pos, resolved_size) = 
+                if let Some(rect) = ctx.ui_resolved_rects.get(&entity) {
+                    *rect
+                } else {
+                    continue;
+                };
+
+            let x = resolved_pos.x;
+            let y = resolved_pos.y;
+            let w = resolved_size.x;
+            let h = resolved_size.y;
 
             // w, h sont maintenant résolus
             let padding = w * 0.2;
@@ -436,15 +564,12 @@ pub fn input_field_focus_system(ctx: &mut Context) {
         return;
     }
 
-    // On récupère les dimensions de l'écran
-    let (screen_w, screen_h) = (screen_width(), screen_height());
-
     let mut clicked_entity: Option<Entity> = None;
     
-    let mut query = ctx.world.query::<(&Transform, &GuiBox, Option<&Visible>)>();
+    let mut query = ctx.world.query::<(&GuiBox, Option<&Visible>)>();
 
-    for (e, (transform, gui_box, visibility)) in query.iter() {
-        if ctx.world.get::<&GuiInputField>(e).is_err() {
+    for (entity, (gui_box, visibility)) in query.iter() {
+        if ctx.world.get::<&GuiInputField>(entity).is_err() {
             continue;
         }
 
@@ -453,22 +578,27 @@ pub fn input_field_focus_system(ctx: &mut Context) {
             continue;
         }
 
-        let x = transform.position.x;
-        let y = transform.position.y;
-        
-        // On résout les dimensions en pixels
-        let w = gui_box.width.resolve(screen_w);
-        let h = gui_box.height.resolve(screen_h);
+        let (resolved_pos, resolved_size) = 
+            if let Some(rect) = ctx.ui_resolved_rects.get(&entity) {
+                *rect
+            } else {
+                continue;
+            };
+
+        let x = resolved_pos.x;
+        let y = resolved_pos.y;
+        let w = resolved_size.x;
+        let h = resolved_size.y;
 
         let is_hovered = mouse_x >= x && mouse_x <= (x + w) && mouse_y >= y && mouse_y <= (y + h);
 
         if is_hovered {
-            clicked_entity = Some(e);
+            clicked_entity = Some(entity);
             break;
         }
     }
 
-    // Le reste de la logique est inchangé
+    // Logic for setting focus remains the same
     let mut query = ctx.world.query::<&mut GuiInputField>();
     for (e, input_field) in query.iter() {
         if Some(e) == clicked_entity {
@@ -491,21 +621,15 @@ pub fn input_field_typing_system(ctx: &mut Context) {
     const KEY_REPEAT_INITIAL_DELAY: f32 = 0.4;
     const KEY_REPEAT_RATE: f32 = 0.05;
 
-    // On récupère la largeur de l'écran
-    let screen_w = screen_width();
+    let mut query = ctx.world.query::<(&mut GuiInputField, &GuiBox, Option<&FontComponent>)>();
 
-    for (_, (input_field, gui_box, font_opt)) in ctx.world.query::<(&mut GuiInputField, &GuiBox, Option<&FontComponent>)>().iter() {
+    for (entity, (input_field, _gui_box, font_opt)) in query.iter() {
         if !input_field.is_focused {
-            // ... (logique inchangée)
             input_field.backspace_repeat_timer = 0.0;
             input_field.left_key_repeat_timer = 0.0;
             input_field.right_key_repeat_timer = 0.0;
             continue;
         }
-
-        // ...
-        // (Toute la logique de gestion des flèches, backspace, delete, et saisie est inchangée)
-        // ...
         
         // --- GESTION FLÈCHE GAUCHE (avec répétition) ---
         let left_pressed = is_key_pressed(KeyCode::Left);
@@ -633,8 +757,13 @@ pub fn input_field_typing_system(ctx: &mut Context) {
         let text_before_caret: String = input_field.text.chars().take(input_field.caret_position).collect();
         let caret_x_absolute = measure_text(&text_before_caret, font_to_use, input_field.font_size as u16, 1.0).width;
 
-        // On résout la largeur en pixels
-        let w = gui_box.width.resolve(screen_w);
+        // Get 'w' from the resolved rects
+        let w = if let Some((_, size)) = ctx.ui_resolved_rects.get(&entity) {
+            size.x
+        } else {
+            300.0 // Fallback, though it should be found
+        };
+
         let visible_width = w - (input_field.padding.x * 2.0);
 
         // Le reste de la logique de scroll est inchangée
@@ -663,12 +792,9 @@ pub fn input_field_typing_system(ctx: &mut Context) {
 }
 
 pub fn input_field_render_system(ctx: &mut Context) {
-    // On récupère les dimensions de l'écran
-    let (screen_w, screen_h) = (screen_width(), screen_height());
+    let mut query = ctx.world.query::<(&GuiInputField, &GuiBox, Option<&Visible>, Option<&FontComponent>)>();
 
-    let mut query = ctx.world.query::<(&GuiInputField, &Transform, &GuiBox, Option<&Visible>, Option<&FontComponent>)>();
-
-    for (_, (input_field, transform, gui_box, visibility, font_opt)) in query.iter() {
+    for (entity, (input_field, gui_box, visibility, font_opt)) in query.iter() {
         let is_visible = visibility.map_or(true, |v| v.0);
         if !is_visible { continue; }
 
@@ -676,9 +802,17 @@ pub fn input_field_render_system(ctx: &mut Context) {
             continue;
         }
 
-        // On résout les dimensions en pixels
-        let w = gui_box.width.resolve(screen_w);
-        let h = gui_box.height.resolve(screen_h);
+        let (resolved_pos, resolved_size) = 
+            if let Some(rect) = ctx.ui_resolved_rects.get(&entity) {
+                *rect
+            } else {
+                continue;
+            };
+
+        let x = resolved_pos.x;
+        let y = resolved_pos.y;
+        let w = resolved_size.x;
+        let h = resolved_size.y;
 
         // On utilise w et h résolus
         let rt_w = (w.max(1.0)) as u32;
@@ -686,7 +820,6 @@ pub fn input_field_render_system(ctx: &mut Context) {
 
         let rt = render_target(rt_w, rt_h);
 
-        // ... (Logique de la caméra inchangée)
         let camera = Camera2D {
             render_target: Some(rt.clone()),
             viewport: None,
@@ -751,7 +884,7 @@ pub fn input_field_render_system(ctx: &mut Context) {
             ..Default::default()
         };
 
-        draw_texture_ex(&rt.texture, transform.position.x, transform.position.y, WHITE, draw_params);
+        draw_texture_ex(&rt.texture, x, y, WHITE, draw_params);
     }
 }
 
@@ -768,12 +901,9 @@ pub fn input_focus_update_system(ctx: &mut Context) {
 }
 
 pub fn gui_image_render_system(ctx: &mut Context) {
-    // On récupère les dimensions de l'écran
-    let (screen_w, screen_h) = (screen_width(), screen_height());
-    
-    let mut query = ctx.world.query::<(&GuiImage, &Transform, Option<&GuiBox>, Option<&Visible>)>();
+let mut query = ctx.world.query::<(&GuiImage, &Transform, Option<&GuiBox>, Option<&Visible>)>();
 
-    for (_, (gui_image, transform, gui_box_opt, visibility)) in query.iter() {
+    for (entity, (gui_image, transform, gui_box_opt, visibility)) in query.iter() {
         let is_visible = visibility.map_or(true, |v| v.0);
         if !is_visible {
             continue;
@@ -788,17 +918,23 @@ pub fn gui_image_render_system(ctx: &mut Context) {
                 let texture = &spritesheet.texture;
                 let source = spritesheet.get_source_rect(gui_image.col_row.x, gui_image.col_row.y);
 
-                let dest_size = if let Some(gui_box) = gui_box_opt {
-                    // On résout les dimensions en pixels
-                    let w = gui_box.width.resolve(screen_w);
-                    let h = gui_box.height.resolve(screen_h);
-                    vec2(w, h)
-                } else {
-                    vec2(spritesheet.sprite_width * transform.scale.x, spritesheet.sprite_height * transform.scale.y)
-                };
-
-                let draw_x = transform.position.x;
-                let draw_y = transform.position.y;
+                let (draw_x, draw_y, dest_size) = 
+                    if gui_box_opt.is_some() {
+                        // This element has a GuiBox, use the resolved rect
+                        if let Some((pos, size)) = ctx.ui_resolved_rects.get(&entity) {
+                            (pos.x, pos.y, *size)
+                        } else {
+                            continue; // Not laid out
+                        }
+                    } else {
+                        // No GuiBox (e.g., simple icon). Use transform data.
+                        // The transform.position is set by the layout system.
+                        let dest = vec2(
+                            spritesheet.sprite_width * transform.scale.x, 
+                            spritesheet.sprite_height * transform.scale.y
+                        );
+                        (transform.position.x, transform.position.y, dest)
+                    };
 
                 let draw_params = DrawTextureParams {
                     dest_size: Some(dest_size),

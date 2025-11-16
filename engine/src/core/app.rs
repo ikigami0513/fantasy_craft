@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use hecs::World;
 use macroquad::prelude::*;
 use futures::{FutureExt, future::BoxFuture};
@@ -36,6 +38,7 @@ impl App {
                 prev_mouse_pos: Vec2::ZERO,
                 input_focus: InputFocus::default(),
                 splash_screen_data: None,
+                ui_resolved_rects: HashMap::new()
             },
             schedule: Schedule::new(GameState::Playing),
             scene_loader: SceneLoader::new(),

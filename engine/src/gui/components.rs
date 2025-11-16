@@ -408,8 +408,11 @@ impl Default for GuiButton {
 
 #[derive(Deserialize, Debug, Default)]
 pub struct GuiButtonLoaderData {
+    #[serde(default)]
     pub state: String,
+    #[serde(default)]
     pub just_clicked: bool,
+    
     pub hovered_color: ColorData,
     pub pressed_color: ColorData,
     pub normal_color: ColorData

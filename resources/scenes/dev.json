@@ -28,6 +28,9 @@
             "import": "player.json"
         },
         {
+            "import": "menu.json"
+        },
+        {
             "id": "background_tilemap_layer",
             "components": {
                 "TileMapLayerComponent": {

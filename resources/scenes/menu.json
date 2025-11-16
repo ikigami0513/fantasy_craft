@@ -1,0 +1,135 @@
+{
+    "entities": [
+        {
+            "id": "main_menu_layout",
+            "components": {
+                "Transform": {
+                    "position": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "rotation": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "scale": {
+                        "x": 1.0,
+                        "y": 1.0
+                    }
+                },
+                "GuiBox": {
+                    "width": "100%",
+                    "height": "100%",
+                    "color": {
+                        "r": 0.0,
+                        "g": 0.0,
+                        "b": 0.0,
+                        "a": 0.5
+                    },
+                    "border_radius": 0.0,
+                    "screen_space": true
+                },
+                "Visible": true
+            }
+        },
+        {
+            "id": "main_menu_panel",
+            "components": {
+                "Transform": {},
+                "Parent": "main_menu_layout",
+                "GuiBox": {
+                    "width": "60%",
+                    "height": "80%",
+                    "color": {
+                        "r": 0.065,
+                        "g": 0.093,
+                        "b": 0.157,
+                        "a": 0.7
+                    },
+                    "border_radius": 10.0,
+                    "screen_space": true
+                },
+                "GuiLocalOffset": {
+                    "x": "20%",
+                    "y": "10%"
+                }
+            }
+        },
+        {
+            "id": "main_menu_label",
+            "components": {
+                "Transform": {},
+                "Parent": "main_menu_panel",
+                "GuiLocalOffset": {
+                    "x": "50%",
+                    "y": "5%"
+                },
+                "HorizontalAlignment": "center",
+                "VerticalAlignment": "center",
+                "TextDisplay": {
+                    "text": "Menu",
+                    "color": {
+                        "r": 1.0,
+                        "g": 1.0,
+                        "b": 1.0,
+                        "a": 1.0
+                    },
+                    "font_size": 20.0,
+                    "screen_space": true
+                },
+                "FontComponent": "roboto-regular"
+            }
+        },
+        {
+            "id": "main_menu_quit_button",
+            "components": {
+                "Transform": {},
+                "Parent": "main_menu_panel",
+                "GuiLocalOffset": {
+                    "x": "50%",
+                    "y": "15"
+                },
+                "HorizontalAlignment": "center",
+                "VerticalAlignment": "center",
+                "GuiBox": {
+                    "width": "80%",
+                    "height": "10%",
+                    "color": {
+                        "r": 0.0,
+                        "g": 0.0,
+                        "b": 0.0,
+                        "a": 1.0
+                    },
+                    "border_radius": 10.0,
+                    "screen_space": true
+                },
+                "GuiButton": {
+                    "normal_color": {
+                        "r": 0.065,
+                        "g": 0.093,
+                        "b": 0.157,
+                        "a": 1.0
+                    },
+                    "hovered_color": {
+                        "r": 0.065,
+                        "g": 0.093,
+                        "b": 0.157,
+                        "a": 1.0
+                    },
+                    "pressed_color": {
+                        "r": 0.065,
+                        "g": 0.093,
+                        "b": 0.157,
+                        "a": 1.0
+                    }
+                }
+            }
+        },
+        {
+            "id": "main_menu_quit_button_label",
+            "components": {
+                
+            }
+        }
+    ]
+}
