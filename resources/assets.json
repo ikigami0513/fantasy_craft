@@ -11,6 +11,12 @@
             "path": "resources/fonts/Roboto/static/Roboto-Regular.ttf"
         }
     ],
+    "sounds": [
+        {
+            "id": "button_click",
+            "path": "resources/sounds/button_click.wav"
+        }
+    ],
     "spritesheets": [
         {
             "id": "player_base",

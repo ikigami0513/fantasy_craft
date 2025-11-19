@@ -1,4 +1,5 @@
 use std::{collections::HashMap, sync::Arc};
+use macroquad::audio::Sound;
 use macroquad::prelude::*;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
@@ -42,6 +43,12 @@ struct AnimationData {
     flip: Option<bool>, 
 }
 
+#[derive(Deserialize)]
+struct SoundData {
+    id: String,
+    path: String
+}
+
 #[derive(Deserialize, Default)]
 struct AssetFileData {
     #[serde(default)]
@@ -55,6 +62,9 @@ struct AssetFileData {
 
     #[serde(default)]
     animations: Vec<AnimationData>,
+
+    #[serde(default)]
+    sounds: Vec<SoundData>
 }
 
 // --- AssetServer ---
@@ -64,7 +74,8 @@ pub struct AssetServer {
     maps: HashMap<String, TileMap>,
     rendered_maps: HashMap<String, RenderedTileMap>,
     rendered_layers: HashMap<String, HashMap<String, RenderTarget>>,
-    fonts: HashMap<String, Font>
+    fonts: HashMap<String, Font>,
+    sounds: HashMap<String, Sound>
 }
 
 #[allow(dead_code)]
@@ -76,7 +87,8 @@ impl AssetServer {
             maps: HashMap::new(),
             rendered_maps: HashMap::new(),
             rendered_layers: HashMap::new(),
-            fonts: HashMap::new()
+            fonts: HashMap::new(),
+            sounds: HashMap::new()
         }
     }
 
@@ -117,10 +129,24 @@ impl AssetServer {
         self.rendered_layers.get(map_id).and_then(|layers| layers.get(layer_name))
     }
 
+    pub async fn load_sound(&mut self, name: &str, path: &str) {
+        match macroquad::audio::load_sound(path).await {
+            Ok(sound) => {
+                self.sounds.insert(name.to_string(), sound);
+            }
+            Err(e) => eprintln!("Failed to load sound {}: {:?}", path, e)
+        }
+    }
+
+    pub fn get_sound(&self, name: &str) -> Option<&Sound> {
+        self.sounds.get(name)
+    }
+
     pub fn merge(&mut self, other: AssetServer) {
         self.animations.extend(other.animations);
         self.spritesheets.extend(other.spritesheets);
         self.fonts.extend(other.fonts);
+        self.sounds.extend(other.sounds);
         self.maps.extend(other.maps);
     }
 
@@ -267,6 +293,11 @@ impl AssetServer {
         for font_data in asset_data.fonts {
             let font = load_ttf_font(&font_data.path).await.unwrap();
             self.fonts.insert(font_data.id.clone(), font);
+        }
+
+        // 4. Chargement des sons
+        for sound_data in asset_data.sounds {
+            self.load_sound(&sound_data.id, &sound_data.path).await;
         }
 
         Ok(())

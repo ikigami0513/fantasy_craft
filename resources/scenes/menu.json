@@ -92,7 +92,7 @@
                 "Parent": "main_menu_panel",
                 "GuiLocalOffset": {
                     "x": "50%",
-                    "y": "15"
+                    "y": "15%"
                 },
                 "HorizontalAlignment": "center",
                 "VerticalAlignment": "center",
@@ -147,6 +147,81 @@
                 "VerticalAlignment": "center",
                 "TextDisplay": {
                     "text": "Quit",
+                    "color": {
+                        "r": 1.0,
+                        "g": 1.0,
+                        "b": 1.0,
+                        "a": 1.0
+                    },
+                    "font_size": 20.0,
+                    "screen_space": true
+                },
+                "FontComponent": "roboto-regular"
+            }
+        },
+        {
+            "id": "main_menu_test_button",
+            "components": {
+                "Transform": {},
+                "GuiElement": {},
+                "Parent": "main_menu_panel",
+                "GuiLocalOffset": {
+                    "x": "50%",
+                    "y": "30%"
+                },
+                "HorizontalAlignment": "center",
+                "VerticalAlignment": "center",
+                "GuiBox": {
+                    "width": "80%",
+                    "height": "10%",
+                    "color": {
+                        "r": 0.0,
+                        "g": 0.0,
+                        "b": 0.0,
+                        "a": 1.0
+                    },
+                    "border_radius": 10.0,
+                    "screen_space": true
+                },
+                "GuiButton": {
+                    "normal_color": {
+                        "r": 0.065,
+                        "g": 0.093,
+                        "b": 0.157,
+                        "a": 1.0
+                    },
+                    "hovered_color": {
+                        "r": 0.095,
+                        "g": 0.135,
+                        "b": 0.215,
+                        "a": 1.0
+                    },
+                    "pressed_color": {
+                        "r": 0.045,
+                        "g": 0.065,
+                        "b": 0.110,
+                        "a": 1.0
+                    }
+                },
+                "GuiAction": {
+                    "action_id": "test_button"
+                }
+            }
+        },
+        {
+            "id": "main_menu_test_button_label",
+            "components": {
+                "Transform": {},
+                "GuiElement": {},
+                "Parent": "main_menu_test_button",
+                "GuiLocalOffset": {
+                    "x": "0%",
+                    "y": "0%"
+                },
+                "HorizontalAlignment": "center",
+                "VerticalAlignment": "center",
+                "TextDisplay": {
+                    "text": "Test",
                     "color": {
                         "r": 1.0,
                         "g": 1.0,

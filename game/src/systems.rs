@@ -2,7 +2,7 @@ use std::process::exit;
 
 use hecs::Entity;
 use macroquad::prelude::*;
-use engine::{core::{event::EventBus, focus::InputFocus}, gui::{components::TextDisplay, event::UiClickEvent}, prelude::*};
+use engine::{audio::event::PlaySoundEvent, core::{event::EventBus, focus::InputFocus}, gui::{components::TextDisplay, event::UiClickEvent}, prelude::*};
 use ::rand::{seq::IteratorRandom, thread_rng, Rng};
 use crate::components::{AnimationPrefix, Behavior, BehaviorComponent, FpsDisplay, MainMenu, NpcTag, PlayerTag};
 
@@ -152,16 +152,45 @@ pub fn check_player_npc_collision(ctx: &mut Context) {
 }
 
 pub fn menu_buttons_system(ctx: &mut Context) {
-    let event_bus = ctx.resource::<EventBus>();
+    // 1. Variables tampons pour stocker les actions à effectuer
+    let mut should_quit = false;
+    let mut sound_to_play: Option<String> = None;
 
-    for event in event_bus.read::<UiClickEvent>() {
-        match event.action_id.as_str() {
-            "quit_game" => {
-                println!("Bye Fantasy Craft");
-                exit(0);
-            },
-            _ => println!("Unknown action : {}", event.action_id)
+    // --- PHASE DE LECTURE (Scope limité) ---
+    {
+        // On emprunte l'EventBus en lecture seule
+        let event_bus = ctx.resource::<EventBus>();
+
+        for event in event_bus.read::<UiClickEvent>() {
+            match event.action_id.as_str() {
+                "quit_game" => {
+                    should_quit = true;
+                },
+                "test_button" => {
+                    // On note juste qu'on veut jouer un son, on ne l'envoie pas encore
+                    sound_to_play = Some("button_click".to_string());
+                },
+                _ => println!("Unknown action : {}", event.action_id)
+            }
         }
+    } 
+    // ICI : L'emprunt de lecture sur 'event_bus' est terminé (dropped).
+    // Nous pouvons maintenant ré-emprunter le contexte en écriture.
+
+    // --- PHASE D'ÉCRITURE ---
+
+    // 1. Envoyer les sons
+    if let Some(sound_name) = sound_to_play {
+        // On récupère l'EventBus en mode MUTABLE pour envoyer
+        ctx.resource_mut::<EventBus>().send(PlaySoundEvent {
+            sound_name
+        });
+    }
+
+    // 2. Quitter
+    if should_quit {
+        println!("Bye Fantasy Craft");
+        exit(0);
     }
 }
 

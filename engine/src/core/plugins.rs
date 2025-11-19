@@ -1,4 +1,4 @@
-use crate::{core::{app::App, event::EventBus, focus::InputFocus, time::DeltaTime}, hierarchy::plugins::HierarchyPlugin, prelude::{AnimationPlugin, Camera2dPlugin, GameState, GuiPlugin, PhysicsPlugin, Stage, System, TiledMapPlugin, collider_debug_render_system}, utils::plugins::UtilsPlugin};
+use crate::{audio::plugin::AudioPlugin, core::{app::App, event::EventBus, focus::InputFocus, time::DeltaTime}, hierarchy::plugins::HierarchyPlugin, prelude::{AnimationPlugin, Camera2dPlugin, GameState, GuiPlugin, PhysicsPlugin, Stage, System, TiledMapPlugin, collider_debug_render_system}, utils::plugins::UtilsPlugin};
 
 pub trait Plugin {
     fn build(&self, app: &mut App);
@@ -19,7 +19,8 @@ impl Plugin for Default2dPlugin {
             .add_plugin(HierarchyPlugin)
             .add_plugin(TiledMapPlugin)
             .add_plugin(AnimationPlugin)
-            .add_plugin(GuiPlugin);
+            .add_plugin(GuiPlugin)
+            .add_plugin(AudioPlugin);
     }
 }
 
