@@ -9,7 +9,8 @@ use crate::core::plugins::Plugin;
 use crate::core::time::DeltaTime;
 use crate::graphics::splash_screen::{SplashScreenData, animate_splash_screen, despawn_splash_screen, setup_splash_screen};
 use crate::input::manager::InputManager;
-use crate::prelude::{PreviousMousePosition, Spritesheet, System};
+use crate::prelude::{Spritesheet, System};
+use crate::gui::resources::PreviousMousePosition;
 use crate::scene::scene_loader::SceneLoader;
 
 pub struct App {

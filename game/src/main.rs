@@ -26,7 +26,7 @@ async fn main() {
         .register("FpsDisplay", Box::new(FpsDisplayLoader));
 
     app
-        .with_splash_screen_enabled(false)
+        .with_splash_screen_enabled(true)
         .with_assets_file("resources/assets.json".to_string())
         .with_scene_path("resources/scenes/dev.json".to_string())
         .with_binding_file("resources/bindings.json".to_string())

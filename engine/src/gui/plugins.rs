@@ -2,7 +2,11 @@ use std::collections::HashMap;
 
 use macroquad::math::Vec2;
 
-use crate::{gui::systems::text_render_system, prelude::{FontComponentLoader, GameState, GuiActionLoader, GuiBoxLoader, GuiButtonLoader, GuiCheckboxLoader, GuiDraggableLoader, GuiElementLoader, GuiImageLoader, GuiInputFieldLoader, GuiLayoutLoader, GuiLocalOffsetLoader, GuiSliderLoader, HorizontalAlignmentLoader, Plugin, PreviousMousePosition, Stage, System, TextDisplayLoader, UiResolvedRects, VerticalAlignmentLoader, button_interaction_system, checkbox_logic_system, checkbox_render_system, draggable_system, gui_box_render_system, gui_image_render_system, gui_resolve_layout_system, input_field_focus_system, input_field_render_system, input_field_typing_system, input_focus_update_system, slider_interaction_system, slider_render_system}};
+use crate::{gui::{alignment::{HorizontalAlignmentLoader, VerticalAlignmentLoader}, gui_action::GuiActionLoader, gui_box::{GuiBoxLoader, gui_box_render_system}, gui_button::button_interaction_system, gui_checkbox::{GuiCheckboxLoader, checkbox_logic_system, checkbox_render_system}, gui_draggable::{GuiDraggableLoader, draggable_system}, gui_image::{GuiImageLoader, gui_image_render_system}, gui_input_field::{GuiInputFieldLoader, input_field_focus_system, input_field_render_system, input_field_typing_system}, gui_layout::{GuiLayoutLoader, gui_resolve_layout_system}, gui_local_offset::GuiLocalOffsetLoader, gui_slider::{GuiSliderLoader, slider_interaction_system, slider_render_system}, text_display::{TextDisplayLoader, text_render_system}}, prelude::{GameState, Plugin, Stage, System}};
+use crate::gui::resources::{UiResolvedRects, PreviousMousePosition};
+use crate::gui::gui_element::GuiElementLoader;
+use crate::gui::font_component::FontComponentLoader;
+use crate::gui::gui_button::GuiButtonLoader;
 
 pub struct GuiPlugin;
 
@@ -55,10 +59,6 @@ impl Plugin for GuiPlugin {
             ))
             .add_system(Stage::Update, System::new(
                 input_field_typing_system,
-                vec![GameState::Playing, GameState::Menu]
-            ))
-            .add_system(Stage::Update, System::new(
-                input_focus_update_system,
                 vec![GameState::Playing, GameState::Menu]
             ))
             .add_system(Stage::GuiRender, System::new(

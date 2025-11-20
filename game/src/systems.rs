@@ -2,9 +2,10 @@ use std::process::exit;
 
 use hecs::Entity;
 use macroquad::prelude::*;
-use engine::{audio::event::PlaySoundEvent, core::event::EventBus, gui::{components::TextDisplay, event::UiClickEvent}, input::{focus::InputFocus, manager::InputManager}, prelude::*};
+use engine::{audio::event::PlaySoundEvent, core::event::EventBus, gui::{event::UiClickEvent}, input::{focus::InputFocus, manager::InputManager}, prelude::*};
 use ::rand::{seq::IteratorRandom, thread_rng, Rng};
 use crate::components::{AnimationPrefix, Behavior, BehaviorComponent, FpsDisplay, MainMenu, NpcTag, PlayerTag};
+use engine::gui::text_display::TextDisplay;
 
 pub fn npc_behavior_system(ctx: &mut Context) {
     for (_, (transform, npc, behavior, state, direction, speed, animation_comp)) in ctx.world.query::<(&mut Transform, &mut NpcTag, &BehaviorComponent, &mut StateComponent, &mut DirectionComponent, &Speed, &mut AnimationComponent)>().iter() {
