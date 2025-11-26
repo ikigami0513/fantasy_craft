@@ -9,9 +9,6 @@
 Powered by [Macroquad](https://github.com/not-fl3/macroquad) and [Hecs](https://github.com/Ralith/hecs).
 
 [![License: MPL 2.0](https://img.shields.io/badge/License-MPL_2.0-brightgreen.svg)](https://opensource.org/licenses/MPL-2.0)
-[![Crates.io](https://img.shields.io/crates/v/fantasy-craft.svg)](https://crates.io/crates/fantasy-craft)
-[![Docs](https://docs.rs/fantasy-craft/badge.svg)](https://docs.rs/fantasy-craft)
-[![Build Status](https://img.shields.io/github/actions/workflow/status/foxvoid-studio/fantasy-craft/ci.yml)](https://github.com/foxvoid-studio/fantasy-craft/actions)
 
 [Foxvoid Platform](https://github.com/foxvoid-studio) • [Documentation](https://docs.foxvoid.com) • [Discord](https://discord.gg/placeholder)
 
