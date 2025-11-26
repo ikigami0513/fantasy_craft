@@ -44,10 +44,29 @@ fantasy-craft = "0.1.0"
 
 ## 🚀 Quick Start
 
-Here is how to create a simple window with a player entity in less than 30 lines of code.
+Here is how to create a simple window in less than 20 lines of code.
 
 ```rust
-  // todo: add fantasy craft code example
+use macroquad::prelude::*;
+use fantasy_craft::prelude::*;
+
+fn window_conf() -> Conf {
+   Conf {
+      window_title: "Fantasy Craft".to_owned(),
+      window_width: 1920,
+      window_height: 1080,
+      ..Default::default()
+   }
+}
+
+#[macroquad::main(window_conf)]
+async fn main() {
+   let mut app = App::new(window_conf());
+
+   app.with_splash_screen_enabled(true);
+
+   app.run().await
+}
 ```
 
 ## 🏗️ Architecture
