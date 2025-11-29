@@ -1,4 +1,4 @@
-use engine::prelude::*;
+use fantasy_craft::prelude::*;
 
 use crate::{components::{AnimationPrefixLoader, BehaviorComponentLoader, MainMenuLoader, NpcTagLoader, PlayerTagLoader}, systems::{check_player_npc_collision, npc_behavior_system, player_update, menu_buttons_system, toggle_main_menu_system}};
 

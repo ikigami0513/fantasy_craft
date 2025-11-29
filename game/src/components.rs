@@ -1,4 +1,4 @@
-use engine::scene::scene_loader::ComponentLoader;
+use fantasy_craft::prelude::{ComponentLoader, Context};
 use macroquad::prelude::*;
 use serde::Deserialize;
 
@@ -32,7 +32,7 @@ pub struct BehaviorComponent(pub Behavior);
 pub struct BehaviorComponentLoader;
 
 impl ComponentLoader for BehaviorComponentLoader {
-    fn load(&self, ctx: &mut engine::prelude::Context, entity: hecs::Entity, data: &serde_json::Value) {
+    fn load(&self, ctx: &mut Context, entity: hecs::Entity, data: &serde_json::Value) {
         let loader_data: String = serde_json::from_value(data.clone())
             .unwrap_or_default();
 
@@ -48,7 +48,7 @@ pub struct PlayerTag;
 pub struct PlayerTagLoader;
 
 impl ComponentLoader for PlayerTagLoader {
-    fn load(&self, ctx: &mut engine::prelude::Context, entity: hecs::Entity, _data: &serde_json::Value) {
+    fn load(&self, ctx: &mut Context, entity: hecs::Entity, _data: &serde_json::Value) {
         ctx.world.insert_one(entity, PlayerTag).expect("Failed to insert PlayerTag");
     }
 }
@@ -59,7 +59,7 @@ pub struct AnimationPrefix(pub String);
 pub struct AnimationPrefixLoader;
 
 impl ComponentLoader for AnimationPrefixLoader {
-    fn load(&self, ctx: &mut engine::prelude::Context, entity: hecs::Entity, data: &serde_json::Value) {
+    fn load(&self, ctx: &mut Context, entity: hecs::Entity, data: &serde_json::Value) {
         let loader_data: String = serde_json::from_value(data.clone())
             .unwrap_or_default();
 
@@ -86,7 +86,7 @@ pub struct NpcTagLoaderData {
 pub struct NpcTagLoader;
 
 impl ComponentLoader for NpcTagLoader {
-    fn load(&self, ctx: &mut engine::prelude::Context, entity: hecs::Entity, data: &serde_json::Value) {
+    fn load(&self, ctx: &mut Context, entity: hecs::Entity, data: &serde_json::Value) {
         let loader_data: NpcTagLoaderData = serde_json::from_value(data.clone())
             .unwrap_or_default();
 
@@ -115,7 +115,7 @@ pub struct FpsDisplayLoaderData {
 pub struct FpsDisplayLoader;
 
 impl ComponentLoader for FpsDisplayLoader {
-    fn load(&self, ctx: &mut engine::prelude::Context, entity: hecs::Entity, data: &serde_json::Value) {
+    fn load(&self, ctx: &mut Context, entity: hecs::Entity, data: &serde_json::Value) {
         let loader_data: FpsDisplayLoaderData = serde_json::from_value(data.clone())
             .unwrap_or_default();
 
@@ -134,7 +134,7 @@ pub struct MainMenu;
 pub struct MainMenuLoader;
 
 impl ComponentLoader for MainMenuLoader {
-    fn load(&self, ctx: &mut engine::prelude::Context, entity: hecs::Entity, _data: &serde_json::Value) {
+    fn load(&self, ctx: &mut Context, entity: hecs::Entity, _data: &serde_json::Value) {
         ctx.world.insert_one(entity, MainMenu).expect("Failed to insert MainMenu");
     }
 }

@@ -5,9 +5,9 @@ use macroquad::prelude::*;
 // removed: use macroquad::rand::*; // 'prelude' already includes rand, but explicit use is fine too if you prefer.
 // removed: use ::rand::{seq::IteratorRandom, thread_rng, Rng}; // We don't need the external rand crate anymore.
 
-use engine::{audio::event::PlaySoundEvent, core::event::EventBus, gui::{event::UiClickEvent}, input::{focus::InputFocus, manager::InputManager}, prelude::*};
+use fantasy_craft::{audio::event::PlaySoundEvent, core::event::EventBus, gui::{event::UiClickEvent}, input::{focus::InputFocus, manager::InputManager}, prelude::*};
 use crate::components::{AnimationPrefix, Behavior, BehaviorComponent, FpsDisplay, MainMenu, NpcTag, PlayerTag};
-use engine::gui::text_display::TextDisplay;
+use fantasy_craft::gui::text_display::TextDisplay;
 
 /// System handling NPC logic using Macroquad's RNG
 pub fn npc_behavior_system(ctx: &mut Context) {

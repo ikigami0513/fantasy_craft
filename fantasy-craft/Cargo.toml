@@ -1,0 +1,30 @@
+[package]
+name = "fantasy-craft"
+version = "0.0.2"
+edition = "2024"
+description = "A 2D / 2.5D game engine built on top of Macroquad and Hecs for the Foxvoid Ecosystem"
+license = "MPL-2.0 license"
+
+repository = "https://github.com/foxvoid-studio/fantasy_craft"
+keywords = ["gamedev", "engine", "macroquad", "ecs"]
+categories = ["game-development", "game-engines"]
+
+exclude = [
+    "resources/*",
+    ".github/*",
+    "game/*"
+]
+
+[lib]
+name = "fantasy_craft"
+path = "src/lib.rs"
+
+[dependencies]
+macroquad = { workspace = true }
+hecs = { workspace = true }
+parry2d = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+futures = { workspace = true }
+async-recursion = { workspace = true }
+getrandom = { workspace = true }

@@ -14,15 +14,17 @@ fn custom_getrandom(buf: &mut [u8]) -> Result<(), getrandom::Error> {
 // This macro registers our function as the source of randomness for the whole compilation unit.
 getrandom::register_custom_getrandom!(custom_getrandom);
 
-use engine::prelude::*;
+// UPDATED: We use the crate name 'fantasy_craft' (with an underscore)
+// because Rust replaces hyphens with underscores in package names.
+use fantasy_craft::prelude::*;
 
 mod components;
 mod systems;
 mod plugins;
 
-use crate::components::{FpsDisplayLoader};
+use crate::components::FpsDisplayLoader;
 use crate::plugins::{NpcPlugin, PlayerPlugin};
-use crate::systems::{fps_display_update};
+use crate::systems::fps_display_update;
 
 fn window_conf() -> Conf {
     Conf {

@@ -9,6 +9,6 @@ hecs = { workspace = true }
 parry2d = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-engine = { path = "../engine" }
+fantasy-craft = { path = "../fantasy-craft" }
 async-recursion = { workspace = true }
 getrandom = { workspace = true }
