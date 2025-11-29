@@ -3,7 +3,7 @@ name = "fantasy-craft"
 version = "0.0.2"
 edition = "2024"
 description = "A 2D / 2.5D game engine built on top of Macroquad and Hecs for the Foxvoid Ecosystem"
-license = "MPL-2.0 license"
+license = "MPL-2.0"
 
 repository = "https://github.com/foxvoid-studio/fantasy_craft"
 keywords = ["gamedev", "engine", "macroquad", "ecs"]
